@@ -15,7 +15,7 @@ namespace Hearthglade.EditorTools
     // Lays a point of interest out in a scene instead of in the fields of its PoiSO: the pieces are prefab instances you move, turn and
     // duplicate with the usual tools (snapped to the cells of the map), the paths are two ends and a width, and the island of the map
     // the POI stands on is drawn underneath. The PoiSO stays the source of truth: Load reads it, Save writes it (also on Ctrl+S).
-    // See PoiAuthoring for what is drawn; Tools > POI.
+    // See PoiAuthoring for what is drawn; Hearthglade > POI.
     [ InitializeOnLoad ]
     public static class PoiEditorTool
     {
@@ -32,13 +32,13 @@ namespace Hearthglade.EditorTools
 
         // ---- opening ----
 
-        [ MenuItem( "Tools/POI/Edit selected POI in scene" ) ]
+        [ MenuItem( "Hearthglade/POI/Edit selected POI in scene" ) ]
         public static void OpenSelected()
         {
             Open( Selection.activeObject as PoiSO );
         }
 
-        [ MenuItem( "Tools/POI/Edit selected POI in scene", true ) ]
+        [ MenuItem( "Hearthglade/POI/Edit selected POI in scene", true ) ]
         private static bool OpenSelectedValid()
         {
             return Selection.activeObject is PoiSO;
@@ -453,7 +453,7 @@ namespace Hearthglade.EditorTools
             }
             if( root.poi == null )
             {
-                EditorGUILayout.HelpBox( "Pick a POI asset, or select one in the project and use Tools > POI > Edit selected POI in scene.", UnityEditor.MessageType.Info );
+                EditorGUILayout.HelpBox( "Pick a POI asset, or select one in the project and use Hearthglade > POI > Edit selected POI in scene.", UnityEditor.MessageType.Info );
                 return;
             }
 

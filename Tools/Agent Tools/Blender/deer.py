@@ -1,6 +1,6 @@
 """Low-poly roe deer (a doe: no antlers) for Hearthglade, built from rigid parts that are animated in Unity.
 
-Run headless:   blender -b --python Tools/Blender/deer.py
+Run headless:   blender -b --python "Tools/Agent Tools/Blender/deer.py"
 The rig (Deer > Body > Neck > Head > EarL/EarR, Body > Tail, Body > FL_Up > FL_Low, ...) and the palette are described in
 animal_common.py. The deer faces -Y; in Unity it looks along -Z after import (DeerAssetBuilder turns it around).
 """

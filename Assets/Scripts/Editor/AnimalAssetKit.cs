@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Hearthglade.EditorTools
 {
     /// <summary>
-    /// What every creature built from a Blender model of rigid parts needs (see Tools/Blender/animal_common.py): import the FBX,
+    /// What every creature built from a Blender model of rigid parts needs (see Tools/Agent Tools/Blender/animal_common.py): import the FBX,
     /// make its clips as transform curves on the joints, build the prefab and render a contact sheet of the clips. The creatures
     /// themselves (<see cref="DeerAssetBuilder"/>, <see cref="HenAssetBuilder"/>, <see cref="ButterflyAssetBuilder"/>) only describe
     /// their motion. Building again overwrites the assets in place, so their GUIDs stay.

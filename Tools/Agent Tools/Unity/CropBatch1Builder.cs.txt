@@ -8,7 +8,7 @@ using Hearthglade.Gameplay.Resource;
 using UnityEditor;
 using UnityEngine;
 
-// Temporary: builds the assets of crop batch 1 (Rye ... Corn) from the FBX/PNG files made by Tools/Blender/crops_batch1.py.
+// Temporary: builds the assets of crop batch 1 (Rye ... Corn) from the FBX/PNG files made by Tools/Agent Tools/Blender/crops_batch1.py.
 // Run: Unity.exe -batchmode -quit -projectPath . -executeMethod CropBatch1Builder.Build
 public static class CropBatch1Builder {
     const string ModelDir = "Assets/Arts/Models/Environment/Farming/Crops/";

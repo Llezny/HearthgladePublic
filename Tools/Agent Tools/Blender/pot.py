@@ -21,7 +21,7 @@ from mathutils import Vector
 PALETTE = "E:/Repos/Hearthglade/Assets/Arts/Sprites/ColorPalette/Colorsheet Tree Normal.png"
 TRI_BUDGET = 220
 
-# Palette cells (row, col) from the top-left of the palette image - see Tools/Blender/world_props.py.
+# Palette cells (row, col) from the top-left of the palette image - see Tools/Agent Tools/Blender/world_props.py.
 POT_BODY = (5, 2)   # A9B4BD steel
 POT_DARK = (5, 3)   # 6E7A85 dark steel
 

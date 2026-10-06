@@ -16,7 +16,7 @@ namespace Hearthglade.EditorTools
         private const string MaterialPath = "Assets/Arts/Materials/VFX/PlaceDust.mat";
         private const string PrefabPath = "Assets/Resources/VFX/PlaceDust.prefab";
 
-        [ MenuItem( "LuakszTools/Building/Build place dust" ) ]
+        [ MenuItem( "Tools/Agent Tools/Building/Build place dust" ) ]
         public static void Build() {
             BuildTexture();
             var material = BuildMaterial();

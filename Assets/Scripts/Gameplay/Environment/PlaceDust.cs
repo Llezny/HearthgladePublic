@@ -6,7 +6,7 @@ namespace Hearthglade.Gameplay.Environment
     /// <summary>
     /// A short puff of dust kicked up when the player places a building piece. One pooled particle burst
     /// spread over the piece's footprint; despawns itself once the last puff has faded.
-    /// Prefab built by LuakszTools/Building/Build place dust, loaded from Resources so no scene wiring is needed.
+    /// Prefab built by Tools/Agent Tools/Building/Build place dust, loaded from Resources so no scene wiring is needed.
     /// </summary>
     public class PlaceDust : MonoBehaviour {
 

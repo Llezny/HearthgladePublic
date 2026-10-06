@@ -24,7 +24,7 @@ namespace Hearthglade.EditorTools
             ( "Meadow", 2, 10f ), ( "Forest", 2, 10f ), ( "Swamp", 3, 8f )
         };
 
-        [ MenuItem( "LuakszTools/Animals/Build fireflies" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Build fireflies" ) ]
         public static void Build() {
             ImportTexture();
             var material = BuildMaterial();
@@ -142,7 +142,7 @@ namespace Hearthglade.EditorTools
         }
 
         /// <summary>Renders the swarm against a night sky into one PNG (three moments); needs a graphics device, so no -nographics.</summary>
-        [ MenuItem( "LuakszTools/Animals/Render firefly preview" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Render firefly preview" ) ]
         public static void RenderPreview() {
             string output = Environment.GetEnvironmentVariable( "ANIMAL_PREVIEW" ) ?? "Temp/firefly_preview.png";
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>( PrefabPath );

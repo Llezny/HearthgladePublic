@@ -7,7 +7,7 @@ using static Hearthglade.EditorTools.AnimalAssetKit;
 
 namespace Hearthglade.EditorTools
 {
-    /// <summary>Builds the butterflies (model: Tools/Blender/butterfly.py, three colours): the wing beat clip, the prefabs and their place in the biome tables.</summary>
+    /// <summary>Builds the butterflies (model: Tools/Agent Tools/Blender/butterfly.py, three colours): the wing beat clip, the prefabs and their place in the biome tables.</summary>
     public static class ButterflyAssetBuilder {
 
         private static readonly string[] Variants = { "Orange", "Blue", "Yellow" };
@@ -30,7 +30,7 @@ namespace Hearthglade.EditorTools
             };
         }
 
-        [ MenuItem( "LuakszTools/Animals/Build butterflies" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Build butterflies" ) ]
         public static void Build() {
             foreach( var variant in Variants ) {
                 var butterfly = Build<AmbientFlyer>( SpecOf( variant ), ( serialized, built ) => {
@@ -48,7 +48,7 @@ namespace Hearthglade.EditorTools
             AssetDatabase.SaveAssets();
         }
 
-        [ MenuItem( "LuakszTools/Animals/Render butterfly preview" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Render butterfly preview" ) ]
         public static void RenderButterflyPreview() {
             RenderPreview( SpecOf( Variants[ 0 ] ), Environment.GetEnvironmentVariable( "ANIMAL_PREVIEW" ) ?? "Temp/butterfly_preview.png", 0f, 0.3f );
         }

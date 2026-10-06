@@ -1,6 +1,6 @@
 """Low-poly butterflies for Hearthglade (three colours), built from rigid parts: a body and two wings that Unity flaps.
 
-Run headless:   blender -b --python Tools/Blender/butterfly.py
+Run headless:   blender -b --python "Tools/Agent Tools/Blender/butterfly.py"
 The rig (Butterfly > Body > WingL/WingR) and the palette are described in animal_common.py. The butterfly faces -Y, its wings lie flat
 in the XY plane and turn about the body axis (Y). About 0.14 m across.
 """

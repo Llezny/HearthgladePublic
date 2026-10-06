@@ -7,7 +7,7 @@ A tool for laying out points of interest (`PoiSO`: camps, harbours) as a scene, 
 ## How to use
 
 1. Select a `PoiSO` asset in the Project window and click **Edit layout in scene** in the inspector, or use
-   `Tools > POI > Edit selected POI in scene`. This opens the scene
+   `Hearthglade > POI > Edit selected POI in scene`. This opens the scene
    `Assets/Scenes/Authoring/PoiEditor.unity` (created on first use, in `.gitignore`:
    it is a working copy, the asset is the source of truth).
 2. The pieces are **prefab instances** under the `POI layout` object. Move, rotate,
@@ -39,4 +39,4 @@ A tool for laying out points of interest (`PoiSO`: camps, harbours) as a scene, 
 - Objects that are not prefab instances are skipped on save (with a console warning).
 - Fields outside the layout (placement, spacing, loot, anchor) are still edited in the asset inspector.
 - `HarborAssetBuilder` fills in a harbour layout only when the POI has no pieces yet;
-  `Tools > Ports > Reset harbour layouts to the defaults` restores the built-in layouts.
+  `Tools > Agent Tools > Ports > Reset harbour layouts to the defaults` restores the built-in layouts.

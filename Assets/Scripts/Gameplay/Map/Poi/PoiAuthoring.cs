@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Hearthglade.Gameplay.Map
 {
     /// <summary>
-    /// Editor only: the root of a point of interest laid out in a scene (Tools > POI > Edit POI in scene). Its children are the pieces
+    /// Editor only: the root of a point of interest laid out in a scene (Hearthglade > POI > Edit POI in scene). Its children are the pieces
     /// (prefab instances), and <see cref="PoiPathAuthoring"/> objects for the painted paths. The scene is only a way of drawing: the
     /// source of truth is the <see cref="PoiSO"/>, which is read by Load and written by Save (also when the scene is saved).
     /// One unit of the scene is one world unit; a cell of the map is <see cref="Cell"/> units, so the grid drawn here is the map's.

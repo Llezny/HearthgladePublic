@@ -181,7 +181,7 @@ namespace Hearthglade.Gameplay.Map
             return cell.TopY( baseTopY, elevatedRise ) ?? baseTopY;
         }
 
-        // The measured mesh height of WoodenFloor (Tools/Blender/building_floor_poc.py, printed dims
+        // The measured mesh height of WoodenFloor (Tools/Agent Tools/Blender/building_floor_poc.py, printed dims
         // 0.368x0.368x0.047) - the only floor asset today. A placed floor tile's own transform sits at
         // GroundTopY (its bottom), so anything standing on it must rest this much higher, or it visually
         // sinks into the planks (docs/BUILDING_SYSTEM_PLAN.md section 9). If a second floor asset with a

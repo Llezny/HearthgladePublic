@@ -25,7 +25,7 @@ namespace Editor
             return a;
         }
 
-        [MenuItem("LuakszTools/References/Refresh items database")]
+        [MenuItem("Hearthglade/References/Refresh items database")]
         public static void RefreshItemsDatabase() {
             var itemDatabaseSO = CreateInstance<DatabaseSO>();
             FindAllItemSO( itemDatabaseSO );

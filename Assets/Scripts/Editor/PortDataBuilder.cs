@@ -50,7 +50,7 @@ namespace Hearthglade.EditorTools
             CreateAllPorts();
         }
 
-        [ MenuItem( "Tools/Ports/Assign base values to items" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Assign base values to items" ) ]
         public static void AssignBaseValues()
         {
             int assigned = 0, kept = 0;
@@ -77,7 +77,7 @@ namespace Hearthglade.EditorTools
                 ( missing.Count > 0 ? $"; no item asset named: {string.Join( ", ", missing )}" : "" ) );
         }
 
-        [ MenuItem( "Tools/Ports/Create port data (Mosshollow, Rimehaven, Dunegate)" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Create port data (Mosshollow, Rimehaven, Dunegate)" ) ]
         public static void CreateAllPorts()
         {
             CreateMosshollowPort();

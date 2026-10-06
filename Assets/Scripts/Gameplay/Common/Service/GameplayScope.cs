@@ -33,7 +33,6 @@ using Hearthglade.Gameplay.UI.Menu.Inventory;
 using Hearthglade.Gameplay.UI.Menu.MainMenu;
 using Hearthglade.Gameplay.UI.Menu.Ship;
 using Hearthglade.Gameplay.UI.Menu.Trade;
-using PrefabLightmapBaker;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -42,7 +41,6 @@ namespace Hearthglade.Gameplay.Common.Service {
     public class GameplayScope : LifetimeScope {
         
         [ SerializeField ] LoadedMapEvent loadedMapEvent;
-        [ SerializeField ] PrefabLightmaps prefabLightmaps;
         [ SerializeField ] StatBarsContainerSO statBarsContainerSO;
         [ SerializeField ] MessagesDictionarySO messagesDictionarySO;
 
@@ -138,7 +136,6 @@ namespace Hearthglade.Gameplay.Common.Service {
 
 #region ScriptableObject
             builder.RegisterInstance<LoadedMapEvent>( loadedMapEvent );
-            builder.RegisterInstance<PrefabLightmaps>( prefabLightmaps );
             builder.RegisterInstance<StatBarsContainerSO>( statBarsContainerSO );
             builder.RegisterInstance<MessagesDictionarySO>( messagesDictionarySO );
 #endregion ScriptableObject

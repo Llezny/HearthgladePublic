@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Hearthglade.EditorTools
 {
     /// <summary>
-    /// Rebuilds WoodenDoor.prefab from the split frame/leaf FBX (Tools/Blender/building_wood_poc.py) so the
+    /// Rebuilds WoodenDoor.prefab from the split frame/leaf FBX (Tools/Agent Tools/Blender/building_wood_poc.py) so the
     /// leaf can swing open on interaction while the frame (posts + lintel) stays fixed in the wall opening.
     /// Edits the existing prefab's root in place (PrefabUtility.LoadPrefabContents) instead of building a new
     /// GameObject from scratch, so the root's fileID - and with it WoodenDoor.asset's buildingPrefab reference
@@ -21,12 +21,12 @@ namespace Hearthglade.EditorTools
         private const string PrefabPath = "Assets/_Prefabs/Environment/Structures/WoodenDoor.prefab";
         private const string MaterialPath = "Assets/3rd-Party/BrokenVector/LowPolyTreePack/Materials/Normal.mat";
 
-        // Same building-grid constants as Tools/Blender/building_wood_poc.py.
+        // Same building-grid constants as Tools/Agent Tools/Blender/building_wood_poc.py.
         private const float Cell = 0.3675f;
         private const float PostW = Cell * 0.14f;
         private const float HingeX = -( Cell / 2 - PostW );
 
-        [ MenuItem( "LuakszTools/Building/Rebuild WoodenDoor prefab" ) ]
+        [ MenuItem( "Tools/Agent Tools/Building/Rebuild WoodenDoor prefab" ) ]
         public static void Build() {
             ImportModel( FramePath );
             ImportModel( LeafPath );
@@ -89,7 +89,7 @@ namespace Hearthglade.EditorTools
 
         /// <summary>Renders the door closed and open side by side, so the hinge/frame split can be checked
         /// without the game view. Needs a graphics device, so run Unity without -nographics.</summary>
-        [ MenuItem( "LuakszTools/Building/Render WoodenDoor preview" ) ]
+        [ MenuItem( "Tools/Agent Tools/Building/Render WoodenDoor preview" ) ]
         public static void RenderPreview() {
             RenderPreview( System.Environment.GetEnvironmentVariable( "DOOR_PREVIEW" ) ?? "Temp/door_preview.png" );
         }

@@ -22,7 +22,7 @@ namespace Hearthglade.EditorTools
         // What a gesture does to a muscle: its value in time (idle = the value of the idle clip at that time).
         private delegate float Muscle( float time, float idle );
 
-        [ MenuItem( "Tools/Characters/Build gesture clips" ) ]
+        [ MenuItem( "Tools/Agent Tools/Characters/Build gesture clips" ) ]
         public static void BuildAll()
         {
             var idle = AssetDatabase.LoadAssetAtPath<AnimationClip>( IdleClipPath );

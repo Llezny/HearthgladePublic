@@ -1,7 +1,7 @@
 """Crop batch 2: Tomato, Rice, Cranberry, WatermelonPlant, DatePalm, Oats, Turnip, Blueberry, Cherry, Beans, Flax, Cotton,
 Chili, Cattail, Citrus (2026-10-04). Same layout and conventions as crops_batch1.py (read its docstring).
 
-Headless:  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --python Tools/Blender/crops_batch2.py
+Headless:  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --python "Tools/Agent Tools/Blender/crops_batch2.py"
 
 The three trees (Cherry, Citrus via crop_trees.py, DatePalm hand-built) are 0.70 m tall like the apple and fit the 2x2 orchard
 plot. The watermelon crop has no wild mesh: the wild watermelon of the Meadow already exists.

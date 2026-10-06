@@ -9,7 +9,7 @@ using Hearthglade.Gameplay.Resource;
 using UnityEditor;
 using UnityEngine;
 
-// Temporary: builds the assets of crop batch 2 (Tomato ... Citrus) from the FBX/PNG files made by Tools/Blender/crops_batch2.py.
+// Temporary: builds the assets of crop batch 2 (Tomato ... Citrus) from the FBX/PNG files made by Tools/Agent Tools/Blender/crops_batch2.py.
 // Same machinery as CropBatch1Builder; differences: items may be fibres (no food data), the watermelon reuses the existing
 // Watermelon item and wild prefab, and the produce asset name may differ from the crop name.
 // Run: Unity.exe -batchmode -quit -projectPath . -executeMethod CropBatch2Builder.Build   (and .Preview for renders)

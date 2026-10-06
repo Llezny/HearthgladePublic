@@ -84,11 +84,11 @@ namespace Hearthglade.EditorTools
             Biomes = new (string, int, float, SpawnTime)[] { ( "Tundra", 3, 10f, SpawnTime.Always ) }
         };
 
-        [ MenuItem( "LuakszTools/Animals/Build ambient particles" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Build ambient particles" ) ]
         public static void Build() {
             var material = AssetDatabase.LoadAssetAtPath<Material>( MaterialPath );
             if( material == null ) {
-                throw new InvalidOperationException( "Firefly.mat not found - run LuakszTools/Animals/Build fireflies first, its glow material is reused here." );
+                throw new InvalidOperationException( "Firefly.mat not found - run Tools/Agent Tools/Animals/Build fireflies first, its glow material is reused here." );
             }
 
             foreach( var spec in new[] { Pollen, Mist, Snow } ) {

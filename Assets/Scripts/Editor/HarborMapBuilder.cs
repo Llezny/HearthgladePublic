@@ -17,7 +17,7 @@ namespace Hearthglade.EditorTools
         private const string MapFolder = "Assets/Resources/ScriptableObjects/Maps";
         private const int SizeInChunks = 4;
 
-        [ MenuItem( "Tools/Ports/Create Mosshollow map assets" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Create Mosshollow map assets" ) ]
         public static void CreateMosshollow()
         {
             var home = AssetDatabase.LoadAssetAtPath<MapSO>( HomeMapPath );
@@ -46,7 +46,7 @@ namespace Hearthglade.EditorTools
         // Both further ports reuse the noise and the island shape of Mosshollow (the layout of a harbour is made for that size) and
         // differ in their biomes: a bare tundra for Rimehaven, bare sand for Dunegate. The island itself differs by its seed, which comes
         // from the map name.
-        [ MenuItem( "Tools/Ports/Create Rimehaven and Dunegate map assets" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Create Rimehaven and Dunegate map assets" ) ]
         public static void CreateFurtherPorts()
         {
             CreateIsland( "Rimehaven", ( ) => new System.Collections.Generic.List<BiomeSO> { Bare( "Water" ), Bare( "Beach" ), Bare( "Tundra" ) } );
@@ -59,7 +59,7 @@ namespace Hearthglade.EditorTools
             var template = AssetDatabase.LoadAssetAtPath<PerlinNoiseMapConfig>( $"{ConfigFolder}/MosshollowMapConfig.asset" );
             if( home == null || template == null )
             {
-                UnityEngine.Debug.LogError( "[HarborMapBuilder] The home map or the Mosshollow config is missing, run Tools > Ports > Create Mosshollow map assets first" );
+                UnityEngine.Debug.LogError( "[HarborMapBuilder] The home map or the Mosshollow config is missing, run Tools > Agent Tools > Ports > Create Mosshollow map assets first" );
                 return;
             }
             EnsureFolder( BiomeFolder );

@@ -1,6 +1,6 @@
 """Low-poly hen for Hearthglade, built from rigid parts that are animated in Unity (replaces the third party Meshtint chicken).
 
-Run headless:   blender -b --python Tools/Blender/hen.py
+Run headless:   blender -b --python "Tools/Agent Tools/Blender/hen.py"
 The rig (Hen > Body > Neck > Head > Beak/Comb/Wattle/eyes, Body > Tail/WingL/WingR/LegL > FootL, ...) and the palette are described in
 animal_common.py. The hen faces -Y; in Unity it looks along -Z after import (HenAssetBuilder turns it around). About 0.42 m tall.
 """

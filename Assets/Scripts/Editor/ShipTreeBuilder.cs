@@ -19,7 +19,7 @@ namespace Hearthglade.EditorTools
         private const string MenuPrefabPath = "Assets/_Prefabs/UI/ShipTreeMenu.prefab";
         private const string GameScenePath = "Assets/Scenes/Game.unity";
 
-        [ MenuItem( "Tools/Expedition/Create ship tree data and menu" ) ]
+        [ MenuItem( "Tools/Agent Tools/Expedition/Create ship tree data and menu" ) ]
         public static void BuildAll()
         {
             CreateNodes();

@@ -7,7 +7,7 @@ using static Hearthglade.EditorTools.AnimalAssetKit;
 
 namespace Hearthglade.EditorTools
 {
-    /// <summary>Builds the hen (model: Tools/Blender/hen.py): its clips, its prefab and its place in the biome tables.</summary>
+    /// <summary>Builds the hen (model: Tools/Agent Tools/Blender/hen.py): its clips, its prefab and its place in the biome tables.</summary>
     public static class HenAssetBuilder {
 
         private static readonly AnimalSpec Spec = new() {
@@ -32,7 +32,7 @@ namespace Hearthglade.EditorTools
             ( "Meadow", 3, 6f ), ( "Forest", 2, 8f )
         };
 
-        [ MenuItem( "LuakszTools/Animals/Build hen" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Build hen" ) ]
         public static void Build() {
             var hen = Build<Hen>( Spec, ( serialized, built ) => {
                 WireClipAnimal( serialized, built );
@@ -57,7 +57,7 @@ namespace Hearthglade.EditorTools
             AssetDatabase.SaveAssets();
         }
 
-        [ MenuItem( "LuakszTools/Animals/Render hen preview" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Render hen preview" ) ]
         public static void RenderHenPreview() {
             RenderPreview( Spec, Environment.GetEnvironmentVariable( "ANIMAL_PREVIEW" ) ?? "Temp/hen_preview.png", 0.22f, 0.6f );
         }

@@ -2,7 +2,7 @@ namespace Hearthglade.Gameplay.Characters
 {
     /// <summary>
     /// What a face of a character part is, so that its colour can be chosen per character. The order is the order of
-    /// ROLES in Tools/Blender/character_kit.py (the second UV set of a part holds the role of every face).
+    /// ROLES in Tools/Agent Tools/Blender/character_kit.py (the second UV set of a part holds the role of every face).
     /// </summary>
     public enum CharacterColorRole
     {

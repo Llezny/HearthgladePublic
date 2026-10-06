@@ -59,7 +59,7 @@ namespace Hearthglade.EditorTools
             return new Stand { Prefab = prefab, Probability = probability, Spacing = spacing, PatchScale = 7f, PatchCoverage = 0.5f };
         }
 
-        [ MenuItem( "Tools/Ports/Grow the Mosshollow forest" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Grow the Mosshollow forest" ) ]
         public static void GrowForest()
         {
             var variants = CreateVariants();
@@ -68,7 +68,7 @@ namespace Hearthglade.EditorTools
             var config = AssetDatabase.LoadAssetAtPath<PerlinNoiseMapConfig>( ConfigPath );
             if( forest == null || water == null || config == null )
             {
-                UnityEngine.Debug.LogError( "[HarborForestBuilder] The Mosshollow assets are missing, run Tools > Ports > Create Mosshollow map assets first" );
+                UnityEngine.Debug.LogError( "[HarborForestBuilder] The Mosshollow assets are missing, run Tools > Agent Tools > Ports > Create Mosshollow map assets first" );
                 return;
             }
             forest.Resources.Clear();

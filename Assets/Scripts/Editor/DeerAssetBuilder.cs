@@ -7,7 +7,7 @@ using static Hearthglade.EditorTools.AnimalAssetKit;
 
 namespace Hearthglade.EditorTools
 {
-    /// <summary>Builds the roe deer (model: Tools/Blender/deer.py): its clips, its prefab and its place in the biome tables.</summary>
+    /// <summary>Builds the roe deer (model: Tools/Agent Tools/Blender/deer.py): its clips, its prefab and its place in the biome tables.</summary>
     public static class DeerAssetBuilder {
 
         private static readonly AnimalSpec Spec = new() {
@@ -32,7 +32,7 @@ namespace Hearthglade.EditorTools
             ( "Meadow", 2, 12f ), ( "Forest", 3, 10f ), ( "Taiga", 2, 12f )
         };
 
-        [ MenuItem( "LuakszTools/Animals/Build deer" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Build deer" ) ]
         public static void Build() {
             var deer = Build<Deer>( Spec, ( serialized, built ) => {
                 WireClipAnimal( serialized, built );
@@ -58,7 +58,7 @@ namespace Hearthglade.EditorTools
             AssetDatabase.SaveAssets();
         }
 
-        [ MenuItem( "LuakszTools/Animals/Render deer preview" ) ]
+        [ MenuItem( "Tools/Agent Tools/Animals/Render deer preview" ) ]
         public static void RenderDeerPreview() {
             RenderPreview( Spec, Environment.GetEnvironmentVariable( "ANIMAL_PREVIEW" ) ?? "Temp/deer_preview.png", 0.55f, 1.3f );
         }

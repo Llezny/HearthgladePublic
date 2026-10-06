@@ -1,6 +1,6 @@
 """Crop batch 1: Rye, Potato, Cabbage, Lingonberry, Raspberry, Pear, OysterMushroom, Peas, Sunflower, Corn (2026-10-04).
 
-Headless:  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --python Tools/Blender/crops_batch1.py
+Headless:  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --python "Tools/Agent Tools/Blender/crops_batch1.py"
 
 Per plant one FBX in Assets/Arts/Models/Environment/Farming/Crops/<Plant>.fbx holding separate objects named
 <Plant>_Stage0..N (growth stages), <Plant>_Fruit0..N (hidden one by one as they are picked, perennials only) and

@@ -166,7 +166,7 @@ no discoverable source (an intentional safety net against orphaned items).
 * Applied to the trees (patch 11 cells, coverage 0.55), berries (6, 0.35), wild crops and flowers (6-7, 0.4-0.45), wild fruit trees (12, 0.5),
   brown mushrooms (7, 0.35) and bushes (9, 0.5). Probabilities were raised by `1 / coverage / mean climate fit` (the mean fit over the cells of the
   biome on all finite maps); an entry whose mean fit would be under 0.3 (the biome is far from the plant's best climate) kept the patches and lost
-  the niche; the wild wheat and the swamp watermelon have no niche on purpose. Numbers per map: `Tools > Farming > Count wild plants on the home map`;
+  the niche; the wild wheat and the swamp watermelon have no niche on purpose. Numbers per map: `Tools > Agent Tools > Farming > Count wild plants on the home map`;
   totals stayed within roughly +-30 % of before. Ore deposits (`clusterSpacing`) were not touched.
 * Tests: `ResourceNicheTests` (fit, patch coverage, clumping, determinism), written, not run.
 
@@ -190,11 +190,11 @@ Night) replaces the older `MapSO.entitiesOnMap`. `EntityManager.Tick(isDay)` (fe
 - **Ambient VFX entities** (`FireflySwarm` — despite the name, a generic "one `ParticleSystem`,
   plays on enable, fades out via `Retire()`" component, reused beyond fireflies): butterflies
   (`AmbientFlyer`, a flown mesh) and, since 2026-09-23, pollen motes / mist wisps / snow flurries
-  (`Assets/Scripts/Editor/AmbientParticleAssetBuilder.cs`, `LuakszTools/Animals/Build ambient
+  (`Assets/Scripts/Editor/AmbientParticleAssetBuilder.cs`, `Tools/Agent Tools/Animals/Build ambient
   particles`) — no collider, no interaction, purely cosmetic (`CanInteract() => false`).
 
 New animal/ambient assets are built by one-off Editor tools (`*AssetBuilder.cs` under
-`Assets/Scripts/Editor/`, mostly `[MenuItem("LuakszTools/Animals/...")]`) that construct the
+`Assets/Scripts/Editor/`, mostly `[MenuItem("Tools/Agent Tools/Animals/...")]`) that construct the
 prefab/material through Unity's C# API rather than hand-authored YAML — safer than writing a
 `ParticleSystem`'s ~2000-line serialized form by hand.
 

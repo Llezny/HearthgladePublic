@@ -14,7 +14,7 @@ namespace Editor
         int seed = 0;
         
 
-        [MenuItem("LuakszTools/NoiseDisplayer")]
+        [MenuItem("Hearthglade/Noise Displayer")]
         static void Init() {
             var window = GetWindow<EditorGUITextures>("NoiseDrawer");
             window.position = new Rect(0, 0, 800, 600);

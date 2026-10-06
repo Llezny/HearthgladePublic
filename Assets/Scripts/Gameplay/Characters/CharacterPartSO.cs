@@ -11,7 +11,7 @@ namespace Hearthglade.Gameplay.Characters
     }
 
     /// <summary>
-    /// One swappable piece of a character: a skinned mesh made for the shared skeleton (Tools/Blender/character_kit.py). The mesh
+    /// One swappable piece of a character: a skinned mesh made for the shared skeleton (Tools/Agent Tools/Blender/character_kit.py). The mesh
     /// lists its bones by name, so the piece fits any character that has the skeleton, whatever the order of its own bone array.
     /// </summary>
     [CreateAssetMenu(menuName = "Hearthglade/Characters/Part", fileName = "CharacterPart")]

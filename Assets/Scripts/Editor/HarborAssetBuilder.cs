@@ -8,8 +8,8 @@ using UnityEngine;
 
 namespace Hearthglade.EditorTools
 {
-    // Turns the harbour FBX models (Tools/Blender/harbor_props.py) into prefabs and gives the harbour of a port its first layout as a point of interest
-    // (docs/EXPLORATION_LOOP_PLAN.md, W4). Prefabs that exist are kept; a layout that exists is kept too (edit it with Tools > POI).
+    // Turns the harbour FBX models (Tools/Agent Tools/Blender/harbor_props.py) into prefabs and gives the harbour of a port its first layout as a point of interest
+    // (docs/EXPLORATION_LOOP_PLAN.md, W4). Prefabs that exist are kept; a layout that exists is kept too (edit it with Hearthglade > POI).
     public static class HarborAssetBuilder
     {
         private const string ModelFolder = "Assets/Arts/Models/Environment/Harbor";
@@ -56,14 +56,14 @@ namespace Hearthglade.EditorTools
             Walkable( "HarborBoat", 1.5f ),
         };
 
-        [ MenuItem( "Tools/Ports/Build harbour prefabs" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Build harbour prefabs" ) ]
         public static void BuildAll()
         {
             Build( false );
         }
 
         // Puts the layouts of the ports back to the defaults of this file, throwing away what was drawn in the POI editor.
-        [ MenuItem( "Tools/Ports/Reset harbour layouts to the defaults" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Reset harbour layouts to the defaults" ) ]
         public static void ResetLayouts()
         {
             if( EditorUtility.DisplayDialog( "Harbour layouts", "Replace the pieces and paths of all harbour POIs with the defaults of HarborAssetBuilder? Changes made in the POI editor are lost.", "Reset", "Cancel" ) )
@@ -241,10 +241,10 @@ namespace Hearthglade.EditorTools
             var harbor = AssetDatabase.LoadAssetAtPath<PoiSO>( path );
             if( harbor == null )
             {
-                UnityEngine.Debug.LogWarning( $"[HarborAssetBuilder] {path} is missing, no layout for {port} (run the Tools > Ports map builders first)" );
+                UnityEngine.Debug.LogWarning( $"[HarborAssetBuilder] {path} is missing, no layout for {port} (run the Tools > Agent Tools > Ports map builders first)" );
                 return;
             }
-            // The layout is the work of the POI editor (Tools > POI): the defaults below only fill a POI that has nothing yet.
+            // The layout is the work of the POI editor (Hearthglade > POI): the defaults below only fill a POI that has nothing yet.
             if( !reset && ( harbor.pieces.Count > 0 || harbor.paths.Count > 0 ) )
             {
                 return;
@@ -256,7 +256,7 @@ namespace Hearthglade.EditorTools
             {
                 harbor.pieces.Add( new PoiSO.Piece { prefab = prefabs[ Prefab( placement.Prefab ) ], offset = new Vector2( placement.X, placement.Z ), rotation = placement.Yaw } );
             }
-            // The traders (Tools > Characters > Build character kit and traders) stand in front of the first two stalls: the awnings
+            // The traders (Tools > Agent Tools > Characters > Build character kit and traders) stand in front of the first two stalls: the awnings
             // would hide them from the camera. They face south, like the stalls.
             var orchardist = AssetDatabase.LoadAssetAtPath<GameObject>( CharacterAssetBuilder.OrchardistPrefabPath );
             var herbalist = AssetDatabase.LoadAssetAtPath<GameObject>( CharacterAssetBuilder.HerbalistPrefabPath );
@@ -267,7 +267,7 @@ namespace Hearthglade.EditorTools
             }
             else
             {
-                UnityEngine.Debug.LogWarning( "[HarborAssetBuilder] The trader prefabs are missing, the harbour has no traders (run Tools > Characters > Build character kit and traders first)" );
+                UnityEngine.Debug.LogWarning( "[HarborAssetBuilder] The trader prefabs are missing, the harbour has no traders (run Tools > Agent Tools > Characters > Build character kit and traders first)" );
             }
 
             harbor.paths.Clear();

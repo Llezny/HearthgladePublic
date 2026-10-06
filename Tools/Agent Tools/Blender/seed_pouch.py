@@ -1,6 +1,6 @@
 """Seed pouch icons for Hearthglade (CarrotSeed, StrawberrySeed, ...): a small burlap pouch with a coloured band.
 
-Headless:  blender.exe -b --python Tools/Blender/seed_pouch.py
+Headless:  blender.exe -b --python "Tools/Agent Tools/Blender/seed_pouch.py"
 Renders a 512x512 transparent icon per entry of POUCHES into OUT_DIR (the same Workbench look as render_icon.py).
 Colours come from the project palette (Assets/Arts/Sprites/ColorPalette/Colorsheet Tree Normal.png, 4x4 px cells, flat
 UV at a cell centre), so the model needs no material of its own. Icon-only model: not exported to Unity.

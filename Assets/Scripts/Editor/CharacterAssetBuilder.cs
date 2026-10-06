@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Hearthglade.EditorTools
 {
-    // Turns the character kit (Tools/Blender/character_kit.py -> Character.fbx) into game assets (docs/EXPLORATION_LOOP_PLAN.md, W5):
+    // Turns the character kit (Tools/Agent Tools/Blender/character_kit.py -> Character.fbx) into game assets (docs/EXPLORATION_LOOP_PLAN.md, W5):
     // a Humanoid avatar, one CharacterPartSO per part, one CharacterAppearanceSO per outfit and a trader prefab per outfit. The
     // assets that exist are updated in place, so their guids stay.
     public static class CharacterAssetBuilder
@@ -41,7 +41,7 @@ namespace Hearthglade.EditorTools
             new Outfit { Name = "Herbalist", Title = "Herbalist", Prefab = HerbalistPrefabPath, Head = "Head_Herbalist", Torso = "Torso_Herbalist", Shoes = "Shoes_Low" },
         };
 
-        [ MenuItem( "Tools/Characters/Build character kit and traders" ) ]
+        [ MenuItem( "Tools/Agent Tools/Characters/Build character kit and traders" ) ]
         public static void BuildAll()
         {
             CharacterClipBuilder.BuildAll();
@@ -274,7 +274,7 @@ namespace Hearthglade.EditorTools
 
         // Both traders, and Orchardist recoloured, from the front, three quarters, side and back in the idle pose. Needs a graphics
         // device. CHARACTER_PREVIEW is the output file.
-        [ MenuItem( "Tools/Characters/Render trader preview" ) ]
+        [ MenuItem( "Tools/Agent Tools/Characters/Render trader preview" ) ]
         public static void RenderPreview()
         {
             var idle = AssetDatabase.LoadAssetAtPath<AnimationClip>( CharacterClipBuilder.IdleClipPath );
@@ -289,7 +289,7 @@ namespace Hearthglade.EditorTools
         }
 
         // The idle, wave and talk clips at five moments each, seen from the front.
-        [ MenuItem( "Tools/Characters/Render gesture preview" ) ]
+        [ MenuItem( "Tools/Agent Tools/Characters/Render gesture preview" ) ]
         public static void RenderGesturePreview()
         {
             var clips = new[] { CharacterClipBuilder.IdleClipPath, CharacterClipBuilder.WavePath, CharacterClipBuilder.TalkPath }

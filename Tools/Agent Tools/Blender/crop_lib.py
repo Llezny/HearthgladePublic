@@ -1,6 +1,6 @@
 """Shared helpers for the crop model scripts (crops_batch1.py, ...).
 
-Headless:  blender.exe -b --python Tools/Blender/crops_batch1.py
+Headless:  blender.exe -b --python "Tools/Agent Tools/Blender/crops_batch1.py"
 Conventions as in orchard_vineyard.py: metres, Z up, origin at the bottom centre of the plant, every face gets a flat UV
 at a cell centre of the project palette (Assets/Arts/Sprites/ColorPalette/Colorsheet Tree Normal.png), so Unity needs no
 material of its own (Normal.mat). A bed cell is 0.3675 m wide (the model has to stay under ~0.30 m across).

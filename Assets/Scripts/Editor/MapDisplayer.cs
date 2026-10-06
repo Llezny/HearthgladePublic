@@ -37,7 +37,7 @@ namespace Editor
         private List<string> problems = new();
         private Vector2 scroll;
 
-        [MenuItem("LuakszTools/MapDisplayer")]
+        [MenuItem("Hearthglade/Map Displayer")]
         static void Init() {
             var window = GetWindow<MapDisplayer>("MapDisplayer");
             window.position = new Rect(0, 0, 720, 900);

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Hearthglade.EditorTools
 {
-    // Dark timber props for the forest port Mosshollow (Tools/Blender/harbor_forest_props.py): shingled timber houses, wooden stalls, a rail
+    // Dark timber props for the forest port Mosshollow (Tools/Agent Tools/Blender/harbor_forest_props.py): shingled timber houses, wooden stalls, a rail
     // fence, wood piles, a bracket lantern, and the shared props (crates, barrels, boardwalk, ...) in the dark palette of the forest. The
     // layout of Mosshollow is switched to them and dressed with fences and wood piles. Rimehaven and Dunegate keep the original props.
     // Safe to run again: prefabs are refitted, pieces already switched stay, the dressing is only added once.
@@ -55,7 +55,7 @@ namespace Hearthglade.EditorTools
             { "ForestHouseA", 2.3f }, { "ForestHouseB", 2.3f }, { "ForestHouseC", 2.8f }, { "ForestHouseLarge", 3.6f },
         };
 
-        [ MenuItem( "Tools/Ports/Build Mosshollow forest props" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Build Mosshollow forest props" ) ]
         public static void BuildAll()
         {
             if( !AssetDatabase.IsValidFolder( PrefabFolder ) )

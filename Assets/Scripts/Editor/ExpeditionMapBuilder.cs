@@ -26,7 +26,7 @@ namespace Hearthglade.EditorTools
         // Tundra only where it is really cold; the taiga covers the rest of the cold part of the climate space.
         private const float TundraTemperatureTo = -0.7f;
 
-        [ MenuItem( "Tools/Expedition/Create expedition map assets" ) ]
+        [ MenuItem( "Tools/Agent Tools/Expedition/Create expedition map assets" ) ]
         public static void Create()
         {
             var forest = AssetDatabase.LoadAssetAtPath<MapSO>( ForestMapPath );
@@ -48,7 +48,7 @@ namespace Hearthglade.EditorTools
         }
 
         // Prints the share of land per biome for every direction and the first depths, from the real generator pipeline.
-        [ MenuItem( "Tools/Expedition/Print biome shares per direction" ) ]
+        [ MenuItem( "Tools/Agent Tools/Expedition/Print biome shares per direction" ) ]
         public static void PrintShares()
         {
             var map = AssetDatabase.FindAssets( "t:MapSO" )
@@ -56,7 +56,7 @@ namespace Hearthglade.EditorTools
                 .FirstOrDefault( m => m != null && m.mapName == "Expedition" );
             if( map == null )
             {
-                UnityEngine.Debug.LogError( "[ExpeditionMapBuilder] No map named Expedition, run Tools > Expedition > Create expedition map assets first" );
+                UnityEngine.Debug.LogError( "[ExpeditionMapBuilder] No map named Expedition, run Tools > Agent Tools > Expedition > Create expedition map assets first" );
                 return;
             }
             var config = map.perlinNoiseConfig;

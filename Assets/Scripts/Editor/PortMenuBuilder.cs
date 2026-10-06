@@ -16,7 +16,7 @@ namespace Hearthglade.EditorTools
         private const string MenuPrefabPath = "Assets/_Prefabs/UI/PortMenu.prefab";
         private const string GameScenePath = "Assets/Scenes/Game.unity";
 
-        [ MenuItem( "Tools/Ports/Build trade menu" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Build trade menu" ) ]
         public static void BuildAll()
         {
             var menuPrefab = BuildMenuPrefab();
@@ -97,7 +97,7 @@ namespace Hearthglade.EditorTools
         }
 
         // Phase 6: a short list of the orders of the port under the title, added to the prefab that exists (the scene instance follows).
-        [ MenuItem( "Tools/Ports/Add contracts list to the trade menu" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Add contracts list to the trade menu" ) ]
         public static void AddContractsSection()
         {
             var root = PrefabUtility.LoadPrefabContents( MenuPrefabPath );

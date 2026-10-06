@@ -20,7 +20,7 @@ namespace Hearthglade.EditorTools
             Print( "Mosshollow" );
         }
 
-        [ MenuItem( "Tools/Ports/Print Mosshollow layout" ) ]
+        [ MenuItem( "Tools/Agent Tools/Ports/Print Mosshollow layout" ) ]
         public static void PrintMenu()
         {
             Print( "Mosshollow" );

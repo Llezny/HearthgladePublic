@@ -15,7 +15,7 @@ namespace Hearthglade.EditorTools
     {
         private static readonly int[] Seeds = { 12345, 777, 2024 };
 
-        [ MenuItem( "Tools/Farming/Count wild plants on the home map" ) ]
+        [ MenuItem( "Tools/Agent Tools/Farming/Count wild plants on the home map" ) ]
         public static void Count()
         {
             var map = AssetDatabase.FindAssets( "t:MapSO" )
