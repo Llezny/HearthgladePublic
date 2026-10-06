@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Hearthglade.Gameplay.Database;
 using Hearthglade.Gameplay.Items;
 using Hearthglade.Gameplay.Map;
+using Hearthglade.Gameplay.Trade;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -20,8 +21,9 @@ namespace Hearthglade.Tests
     public class ItemSourceTests
     {
         private const string HomeMapPath = "Assets/Resources/ScriptableObjects/Maps/Home.asset";
+        private const string ExpeditionMapPath = "Assets/Resources/ScriptableObjects/Maps/Expedition.asset";
         private const string DatabasePath = "Assets/ScriptableObjects/Configs/DatabaseSO.asset";
-        private const string ItemRecipesPath = "Assets/Resources/JSON/ItemRecipies.JSON";
+        private const string ItemRecipesPath = "Assets/Resources/JSON/HackyRecipies.json";
         private const string BuildingRecipesPath = "Assets/Resources/JSON/BuildingsRecipies.JSON";
 
         // Items with no source on purpose (or not yet). Remove an item from here when it gets one.
@@ -39,15 +41,16 @@ namespace Hearthglade.Tests
 
         private static readonly Regex CraftedName = new("\"craftedItemName\"\\s*:\\s*\"(\\w+)\"", RegexOptions.Compiled);
 
-        private static PerlinNoiseMapConfig HomeConfig() => AssetDatabase.LoadAssetAtPath<MapSO>(HomeMapPath).perlinNoiseConfig;
+        private static PerlinNoiseMapConfig ConfigOf(string mapPath) => AssetDatabase.LoadAssetAtPath<MapSO>(mapPath).perlinNoiseConfig;
 
         private static DatabaseSO Database() => AssetDatabase.LoadAssetAtPath<DatabaseSO>(DatabasePath);
 
-        /// <summary>Item asset name -> the biomes of Home in which something that drops it grows.</summary>
+        /// <summary>Item asset name -> the biomes (of Home, or of the Expedition map) in which something that drops it grows.</summary>
         private static Dictionary<string, List<string>> GatheredOnHome()
         {
             var result = new Dictionary<string, List<string>>();
-            foreach (var biome in HomeConfig().Biomes)
+            foreach (var (mapName, config) in new[] { ("Home", ConfigOf(HomeMapPath)), ("Expedition", ConfigOf(ExpeditionMapPath)) })
+            foreach (var biome in config.Biomes)
             {
                 foreach (var spawn in biome.Resources)
                 {
@@ -68,9 +71,10 @@ namespace Hearthglade.Tests
                         {
                             result[item.name] = biomes = new List<string>();
                         }
-                        if (!biomes.Contains(biome.BiomeName))
+                        var label = mapName + ":" + biome.BiomeName;
+                        if (!biomes.Contains(label))
                         {
-                            biomes.Add(biome.BiomeName);
+                            biomes.Add(label);
                         }
                     }
                 }
@@ -109,6 +113,28 @@ namespace Hearthglade.Tests
             return result;
         }
 
+        /// <summary>Item asset name -> the ports that sell it.</summary>
+        private static Dictionary<string, List<string>> Traded()
+        {
+            var result = new Dictionary<string, List<string>>();
+            foreach (var guid in AssetDatabase.FindAssets("t:PortSO"))
+            {
+                var port = AssetDatabase.LoadAssetAtPath<PortSO>(AssetDatabase.GUIDToAssetPath(guid));
+                foreach (var offer in port.offers.Where(o => o.item != null && o.stock > 0))
+                {
+                    if (!result.TryGetValue(offer.item.name, out var ports))
+                    {
+                        result[offer.item.name] = ports = new List<string>();
+                    }
+                    if (!ports.Contains(port.name))
+                    {
+                        ports.Add(port.name);
+                    }
+                }
+            }
+            return result;
+        }
+
         private static HashSet<string> Cooked()
         {
             return new HashSet<string>(Database().CookingRecipes.Where(r => r != null && r.TargetItem != null).Select(r => r.TargetItem.name));
@@ -121,6 +147,7 @@ namespace Hearthglade.Tests
             var crafted = Crafted();
             var cooked = Cooked();
             var farmed = Farmed();
+            var traded = Traded();
             var table = new StringBuilder("item -> source\n");
             var missing = new List<string>();
 
@@ -130,6 +157,10 @@ namespace Hearthglade.Tests
                 if (gathered.TryGetValue(item.name, out var biomes))
                 {
                     sources.Add("gathered in " + string.Join("/", biomes));
+                }
+                if (traded.TryGetValue(item.name, out var ports))
+                {
+                    sources.Add("sold by " + string.Join("/", ports));
                 }
                 if (crafted.Contains(item.name))
                 {

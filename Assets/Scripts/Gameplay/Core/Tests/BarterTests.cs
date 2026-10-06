@@ -58,14 +58,15 @@ namespace Hearthglade.Core.Tests {
         public void SellValue_FallsWithEveryUnitSold_AndMatchesTheSumOfSingleUnits( ) {
             var profile = Profile( saturation: 0.9f );
             var state = Discovered( profile );
+            double decay = profile.SaturationPerUnit; // the float as stored, not the double 0.9
             double expected = 0;
             for( int i = 0; i < 5; i++ ) {
-                expected += 30 / 1.25 * System.Math.Pow( 0.9, i );
+                expected += 30 / 1.25 * System.Math.Pow( decay, i );
             }
             Assert.AreEqual( expected, BarterCalculator.SellValue( profile, state, Iron, 5 ), 1e-6 );
 
             state.AddSold( Iron.Id, 3 );
-            Assert.AreEqual( 30 / 1.25 * System.Math.Pow( 0.9, 3 ), BarterCalculator.SellValue( profile, state, Iron, 1 ), 1e-6, "units already sold count" );
+            Assert.AreEqual( 30 / 1.25 * System.Math.Pow( decay, 3 ), BarterCalculator.SellValue( profile, state, Iron, 1 ), 1e-6, "units already sold count" );
         }
 
         [ Test ]

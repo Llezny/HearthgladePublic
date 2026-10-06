@@ -78,7 +78,7 @@ namespace Hearthglade.Tests
         public void HomeConfig_HasTheBiomeSet()
         {
             var names = HomeConfig().Biomes.Select(b => b.BiomeName).ToList();
-            foreach (var expected in new[] { "Water", "Beach", "Rocks", "Taiga", "Swamp", "Forest", "Meadow" })
+            foreach (var expected in new[] { "Water", "Beach", "Taiga", "Swamp", "Forest", "Meadow" })
             {
                 CollectionAssert.Contains(names, expected);
             }

@@ -144,8 +144,6 @@ namespace Hearthglade.PlayModeTests {
             Assert.IsTrue( card.CanCraft, "the ingredients are in the inventory" );
             Assert.AreEqual( "Game", gameManager.CurrentState.StateName );
 
-            // entering the building state zooms the camera, which is still an "implement Zoom In" stub that logs an error
-            LogAssert.Expect( LogType.Error, "implement Zoom In" );
             ActionButtonOf( card ).onClick.Invoke();
             await UniTask.DelayFrame( 2 );
 

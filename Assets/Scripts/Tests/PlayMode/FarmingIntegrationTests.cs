@@ -89,8 +89,8 @@ namespace Hearthglade.PlayModeTests {
             var restored = FarmModel.FromSnapshot( farming.Crops, new MapModel( map ).farm );
             Assert.AreEqual( map.Farm.Describe( plot.Key, farming.Now ).Stage, restored.Describe( plot.Key, farming.Now ).Stage );
 
-            // Run the world clock past the growing time (wheat: 120 game minutes).
-            float multiplier = 150f / ( Time.deltaTime * clock.GetTimeScale() );
+            // Run the world clock past the growing time (wheat: 120 game minutes, 240 at the slowest climate speed of 50%).
+            float multiplier = 300f / ( Time.deltaTime * clock.GetTimeScale() );
             clock.AddTime( multiplier );
             var view = map.Farm.Describe( plot.Key, farming.Now );
             Assert.AreEqual( wheat.maxYield, view.ReadyYield, "the crop ripened while its view was gone" );

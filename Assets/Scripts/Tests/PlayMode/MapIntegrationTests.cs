@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Hearthglade.Core.Entities;
 using Hearthglade.Core.World;
 using Hearthglade.Gameplay.Common;
 using Hearthglade.Gameplay.Common.Service;
@@ -433,11 +434,10 @@ namespace Hearthglade.PlayModeTests {
             Assert.Greater( map.Models.Count, 10000, "the map came back with its blocks" );
             Assert.Greater( CountModelObjects( map ), 0, "and its scene objects" );
             var player = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
-            Assert.IsTrue( map.ChunkManager.LoadedChunks.Contains( ChunkManager.PositionToChunkIndex( player.transform.position ) ) );
-            foreach( var index in map.ChunkManager.LoadedChunks ) {
-                map.ChunkManager.TryGetChunk( index, out var chunk );
-                Assert.AreEqual( ChunkVisualState.Built, chunk.visualState );
-            }
+            // The player's position comes from the save after the map was loaded, so the streaming window follows it a few frames later.
+            await WaitUntil( ( ) => map.ChunkManager.LoadedChunks.Contains( ChunkManager.PositionToChunkIndex( player.transform.position ) )
+                && map.ChunkManager.LoadedChunks.All( index => map.ChunkManager.TryGetChunk( index, out var chunk ) && chunk.visualState == ChunkVisualState.Built ),
+                20f, "the chunks around the player loaded and built" );
             Assert.AreEqual( before, System.IO.File.GetLastWriteTimeUtc( contentPath ), "loading must not modify the save" );
         } );
 
@@ -528,6 +528,13 @@ namespace Hearthglade.PlayModeTests {
             return entity != null && entity.transform.parent == map.transform;
         }
 
+        // The swarms of the night-only entities. Other biomes reuse FireflySwarm for their daytime pollen motes and mist, which are not fireflies.
+        private static FireflySwarm[] Fireflies( Map map ) {
+            var names = map.MapType.perlinNoiseConfig.Biomes.SelectMany( b => b.Entities )
+                .Where( d => d.prefab is FireflySwarm && d.time == SpawnTime.Night ).Select( d => d.prefab.name ).ToHashSet();
+            return map.GetComponentsInChildren<FireflySwarm>( true ).Where( e => IsAlive( map, e ) && names.Any( n => e.name.StartsWith( n ) ) ).ToArray();
+        }
+
         [ UnityTest, Timeout( 300000 ) ]
         public IEnumerator Ambient_ButterfliesComeByDay_FirefliesByNight_AndLeaveWhenTheirTimeIsOver( ) => UniTask.ToCoroutine( async ( ) => {
             var mapManager = await BootNewGame();
@@ -537,7 +544,7 @@ namespace Hearthglade.PlayModeTests {
                 map.EntitySpawner.Tick( true );
             }
             var butterflies = map.GetComponentsInChildren<AmbientFlyer>( true ).Where( e => IsAlive( map, e ) ).ToArray();
-            Assert.IsEmpty( map.GetComponentsInChildren<FireflySwarm>( true ).Where( e => IsAlive( map, e ) ), "fireflies by day" );
+            Assert.IsEmpty( Fireflies( map ), "fireflies by day" );
             UnityEngine.Debug.Log( $"{Tag} by day: {butterflies.Length} butterflies" );
             Assert.Greater( butterflies.Length, 0, "no butterflies in the meadow by day" );
 
@@ -547,7 +554,7 @@ namespace Hearthglade.PlayModeTests {
             for( int i = 0; i < 400; i++ ) {
                 map.EntitySpawner.Tick( false );
             }
-            var fireflies = map.GetComponentsInChildren<FireflySwarm>( true ).Where( e => IsAlive( map, e ) ).ToArray();
+            var fireflies = Fireflies( map );
             Assert.IsEmpty( map.GetComponentsInChildren<AmbientFlyer>( true ).Where( e => IsAlive( map, e ) ), "butterflies by night" );
             UnityEngine.Debug.Log( $"{Tag} by night: {fireflies.Length} firefly swarms" );
             Assert.Greater( fireflies.Length, 0, "no fireflies by night" );

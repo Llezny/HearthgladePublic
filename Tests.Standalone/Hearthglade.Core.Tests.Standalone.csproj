@@ -32,6 +32,7 @@
     <Compile Include="../Assets/Scripts/Gameplay/Core/Farming/*.cs" />
     <Compile Include="../Assets/Scripts/Gameplay/Core/World/*.cs" />
     <Compile Include="../Assets/Scripts/Gameplay/Core/Trade/*.cs" />
+    <Compile Include="../Assets/Scripts/Gameplay/Core/Expedition/*.cs" />
     <Compile Include="../Assets/Scripts/Gameplay/Core/Tests/*.cs" />
   </ItemGroup>
 

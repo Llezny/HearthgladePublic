@@ -91,7 +91,12 @@ namespace Hearthglade.PlayModeTests {
             Assert.AreEqual( MapGenerator.GetMapSeed( Seed, PortId, 0 ), portMap.Seed, "a port has a fixed seed" );
             Assert.IsFalse( shipService.CanExplore, "away from Home the only way is back" );
             Assert.IsFalse( portMap.mapEntry.GetComponent<Ship>().Destinations.Any(), "no other destinations from the port" );
-            Assert.LessOrEqual( portMap.Models.Values.Sum( m => m.blockObjects?.Count ?? 0 ), 1, "nothing grows on the island but the ship" );
+            var gatherable = portMap.MapType.perlinNoiseConfig.Biomes.SelectMany( b => b.Resources )
+                .Select( spawn => spawn.resourcePrefab != null ? spawn.resourcePrefab.GetComponent<Hearthglade.Gameplay.Resource.Resource>() : null )
+                .Where( resource => resource != null && !resource.IsProp ).Select( resource => resource.name ).Distinct().ToList();
+            Assert.IsEmpty( gatherable, "the trees of the island are props: nothing on it can be gathered" );
+            Assert.IsFalse( portMap.GetComponentsInChildren<Hearthglade.Gameplay.Resource.Resource>( true ).Any( resource => !resource.IsProp ),
+                "nothing gatherable stands on the island" );
 
             await SailHome( scope );
             Assert.AreEqual( 3, portService.CompletedExpeditions, "the trip counts as an expedition once the player is home" );

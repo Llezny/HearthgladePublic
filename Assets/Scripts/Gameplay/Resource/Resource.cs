@@ -21,6 +21,7 @@ namespace Hearthglade.Gameplay.Resource
 
         // Prop variant of a prefab (a Prefab Variant with this ticked): it looks and blocks like the original but cannot be gathered.
         [ SerializeField ] private bool isProp;
+        public bool IsProp => isProp;
 
         [field: SerializeField] public bool IsCurrentlyGathered { get; protected set; }
         public string TooltipTitle => resourceSO.name;
