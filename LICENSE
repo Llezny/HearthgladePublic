@@ -1,0 +1,56 @@
+Hearthglade Source-Available License (All Rights Reserved)
+
+Copyright (c) 2021-2026 Lukasz Lezny (GitHub: Llezny). All rights reserved.
+
+1. WHAT YOU MAY DO
+
+   You may read and browse this source code, and you may run it locally, for
+   the sole purpose of personally reviewing and evaluating it (for example, to
+   assess the author's skills when hiring, or to learn how the project is
+   structured). You may quote short excerpts, with attribution, when discussing
+   the project.
+
+   GitHub's Terms of Service additionally allow you to view and fork this
+   repository within GitHub. Nothing in this license extends that grant.
+
+2. WHAT YOU MAY NOT DO
+
+   Without prior written permission from the author, you may not:
+
+   a. copy, reproduce or redistribute the code, documentation, data, images or
+      any other content of this repository, in whole or in part;
+   b. modify the code or create derivative works based on it;
+   c. use the code, or ideas expressed through its specific implementation, in
+      any other project, whether commercial or non-commercial;
+   d. use the code to build, publish or distribute a game or any other product
+      or service, whether free or paid;
+   e. sublicense, sell, rent or otherwise commercialise the code;
+   f. use the repository's contents as training data for machine learning or
+      generative AI models;
+   g. remove or alter this notice.
+
+3. NO TRADEMARK LICENSE
+
+   The name "Hearthglade", its logos and its artwork are not licensed to you.
+
+4. THIRD-PARTY MATERIAL
+
+   This license covers only material written by the author. Third-party
+   components, if any are referenced, remain under their own licenses. Most
+   third-party assets used by the project are not included in this repository.
+
+5. TERMINATION
+
+   Any use of the repository outside Section 1 terminates your rights under
+   this license automatically.
+
+6. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE
+   USE OF THE SOFTWARE.
+
+To request permission for anything not allowed above, contact the author
+through the GitHub profile: https://github.com/Llezny

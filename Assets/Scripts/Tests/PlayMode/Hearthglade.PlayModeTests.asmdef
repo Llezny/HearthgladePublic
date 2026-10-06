@@ -1,0 +1,26 @@
+{
+    "name": "Hearthglade.PlayModeTests",
+    "rootNamespace": "Hearthglade.PlayModeTests",
+    "references": [
+        "GUID:cb393e56bae357e4da841d5742d2ff9f",
+        "GUID:d5497777fd3403c2c57f14c4dd26fd1f",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:b0214a6008ed146ff8f122a6a9c2f6cc",
+        "GUID:174bc9f391f1b7f4292b3824c5019a21",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:4c25c05f410a3a447a75c3b0909152ef"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

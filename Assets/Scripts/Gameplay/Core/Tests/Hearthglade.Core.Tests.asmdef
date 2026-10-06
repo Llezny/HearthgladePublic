@@ -1,0 +1,18 @@
+{
+    "name": "Hearthglade.Core.Tests",
+    "rootNamespace": "Hearthglade.Core.Tests",
+    "references": [
+        "GUID:d5497777fd3403c2c57f14c4dd26fd1f"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

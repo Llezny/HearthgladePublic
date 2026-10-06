@@ -1,0 +1,3 @@
+interface ISetup {
+    void Setup();
+}

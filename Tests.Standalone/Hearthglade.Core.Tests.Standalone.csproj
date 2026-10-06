@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Runs the Hearthglade.Core test suite via `dotnet test`, with no dependency on the Unity
+    Editor/Test Runner. Compiles the same source files Unity compiles (linked in place, not
+    copied) - Hearthglade.Core has noEngineReferences: true, so this only works for code that's
+    actually free of UnityEngine, which is the whole point of that assembly.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Hearthglade.Core.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pinned to NUnit 3.x, not 4.x: NUnit 4 moved the classic Assert.AreEqual/IsTrue/etc.
+         methods to a separate ClassicAssert class, but Unity's bundled Test Framework is
+         NUnit 3-based, where they're still on Assert. Staying on 3.x keeps these test files
+         identical whether run here or from Unity's own Test Runner. -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../Assets/Scripts/Gameplay/Core/Stats/*.cs" />
+    <Compile Include="../Assets/Scripts/Gameplay/Core/Entities/*.cs" />
+    <Compile Include="../Assets/Scripts/Gameplay/Core/Items/*.cs" />
+    <Compile Include="../Assets/Scripts/Gameplay/Core/Farming/*.cs" />
+    <Compile Include="../Assets/Scripts/Gameplay/Core/World/*.cs" />
+    <Compile Include="../Assets/Scripts/Gameplay/Core/Trade/*.cs" />
+    <Compile Include="../Assets/Scripts/Gameplay/Core/Tests/*.cs" />
+  </ItemGroup>
+
+</Project>

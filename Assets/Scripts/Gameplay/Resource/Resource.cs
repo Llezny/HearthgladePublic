@@ -1,0 +1,116 @@
+using System;
+using DG.Tweening;
+using Hearthglade.Gameplay.Audio;
+using Hearthglade.Gameplay.Common.Service;
+using Hearthglade.Gameplay.Common.Service.Factory;
+using Hearthglade.Gameplay.Environment;
+using Hearthglade.Gameplay.Expeditions;
+using Hearthglade.Gameplay.Items;
+using Hearthglade.Gameplay.Player.Controller;
+using Hearthglade.Gameplay.Player.Stats;
+using Hearthglade.Gameplay.UI.HUD;
+using Hearthglade.Gameplay.UI.Menu.Inventory;
+using UnityEngine;
+using VContainer;
+
+namespace Hearthglade.Gameplay.Resource
+{
+    public class Resource : SceneObject, IInteractable {
+
+        [ SerializeField ] public ResourceSO resourceSO;
+
+
+        [field: SerializeField] public bool IsCurrentlyGathered { get; protected set; }
+        public string TooltipTitle => resourceSO.name;
+        public string TooltipDescription => resourceSO.ToolTipMessage;
+        public float InteractionDistance => resourceSO.MinInteractionDistance;
+        public AnimationClip InteractionAnim => resourceSO.InteractionAnim;
+        public InteractionTiming InteractionTiming => InteractionTiming.LoadingBar;
+        public float InteractionDuration => GatheringTime.Seconds( resourceSO, playerStatsComponent );
+
+        protected PlayerController playerController;
+        protected PlayerStatsComponent playerStatsComponent;
+        protected InventoryService inventoryService;
+        protected ShipTreeService shipTree;
+        protected TickService tickService;
+        protected GameObjectFactory gameObjectFactory;
+        protected ClockManager clockManager;
+        protected AudioManager audioManager;
+        protected Action interactionCompleted;
+
+        [ Inject ]
+        public void Construct( PlayerController playerController, InventoryService inventoryService, PlayerStatsComponent playerStatsComponent, TickService tickService, GameObjectFactory gameObjectFactory, ClockManager clockManager, AudioManager audioManager, ShipTreeService shipTree ) {
+            this.playerController = playerController;
+            this.inventoryService = inventoryService;
+            this.playerStatsComponent = playerStatsComponent;
+            this.tickService = tickService;
+            this.gameObjectFactory = gameObjectFactory;
+            this.clockManager = clockManager;
+            this.audioManager = audioManager;
+            this.shipTree = shipTree;
+            tickService.RegisterListener(Tick);
+        }
+        
+        protected override void OnEnable() {
+            base.OnEnable();
+            tickService?.RegisterListener(Tick);
+        }
+
+        protected override void OnDisable() {
+            base.OnDisable();
+            interactionCompleted = null;
+            tickService?.UnregisterListener(Tick);
+        }
+
+        public override void Tick() {}
+
+        public void InteractCancelCallback( ) {
+            IsCurrentlyGathered = false;
+        }
+
+        public override void InteractionStart(){
+            clockManager.SetTimeScale( 2 );
+            IsCurrentlyGathered = true;
+            SetPlayerPosition( playerController.transform );
+        }
+        
+        public override bool CanInteract( ) {
+            bool requiredItemCondition() => resourceSO.RequiredItem == null || inventoryService.HasItem( resourceSO.RequiredItem );
+            // Gathering is refused while the yield would not fit, so nothing is lost.
+            bool hasRoom() => resourceSO.ItemSoOnGather == null || inventoryService.CanFit( resourceSO.ItemSoOnGather, resourceSO.NumOfItemsOnGather );
+            return requiredItemCondition() && hasRoom();
+        }
+
+        public void AddInteractionCompletedCallback( Action callback ) {
+            interactionCompleted += callback;
+        }
+
+        protected void SetPlayerPosition( Transform playerTransform ) {
+            playerTransform.LookAt( this.transform );
+            playerTransform.rotation = Quaternion.Euler(
+                0,
+                playerTransform.rotation.eulerAngles.y,
+                playerTransform.rotation.eulerAngles.z
+            );
+        }
+
+        public override void InteractionCompleted() {
+            inventoryService.AddItem( resourceSO.ItemSoOnGather, resourceSO.NumOfItemsOnGather );
+            // The keen eye of the ship tree: sometimes one more of the yield.
+            if( resourceSO.ItemSoOnGather != null && UnityEngine.Random.value < shipTree.HarvestChance ) {
+                inventoryService.AddItem( resourceSO.ItemSoOnGather, 1 );
+            }
+            if( resourceSO.BonusItem != null && UnityEngine.Random.value < resourceSO.BonusChance ) {
+                inventoryService.AddItem( resourceSO.BonusItem, 1 );
+            }
+            //   TODO
+            //   Inventory.instance.DecreaseHandItemDurability();
+            audioManager.Play( resourceSO.OnPickup );
+            clockManager.ResetTimeScale();
+            IsCurrentlyGathered = false;
+            interactionCompleted?.Invoke();
+            Lean.Pool.LeanPool.Despawn( this.gameObject );
+
+        }
+    }
+}

@@ -1,0 +1,532 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Hearthglade.Core.Farming;
+using Hearthglade.Gameplay.Environment.Farming;
+using Hearthglade.Gameplay.Resource;
+using UnityEditor;
+using UnityEngine;
+
+// Temporary: builds the assets of crop batch 1 (Rye ... Corn) from the FBX/PNG files made by Tools/Blender/crops_batch1.py.
+// Run: Unity.exe -batchmode -quit -projectPath . -executeMethod CropBatch1Builder.Build
+public static class CropBatch1Builder {
+    const string ModelDir = "Assets/Arts/Models/Environment/Farming/Crops/";
+    const string IconUsable = "Assets/Arts/Sprites/ItemIcons/Usable/";
+    const string IconResources = "Assets/Arts/Sprites/ItemIcons/Resources/";
+    const string ItemsDir = "Assets/ScriptableObjects/Items/";
+    const string WildResourceDir = "Assets/ScriptableObjects/Map/Resource/";
+    const string CropDir = "Assets/ScriptableObjects/Farming/";
+    const string PrefabDir = "Assets/_Prefabs/Environment/Farming/";
+    const string BiomeDir = "Assets/ScriptableObjects/Map/Biomes/";
+    const string MaterialPath = "Assets/3rd-Party/BrokenVector/LowPolyTreePack/Materials/Normal.mat";
+    const int ObjectLayer = 8;
+    const float BedY = 0.052f;
+    const float OrchardY = 0.033f;
+    const float CellHalf = 0.18375f;
+
+    class Spec {
+        public string Name;                 // asset name = crop id = FBX name
+        public string Display;              // produce itemName
+        public string Description;
+        public string ProduceFolder;        // under ItemsDir
+        public string ProduceIcon;          // png path
+        public string SeedAsset;
+        public string SeedName;
+        public string SeedDescription;
+        public string SeedIcon;
+        public string SeedTemplate;
+        public string ProduceTemplate;
+        public Hearthglade.Core.Items.FoodType Food;
+        public float Thirst, Hunger, Health;
+        public int Stack = 16;
+        public CropLifecycle Lifecycle;
+        public PlotType Plot;
+        public float SeedDrop;
+        public int[] StageMinutes;
+        public int MaxYield;
+        public int FruitRegrow;
+        public ForageKind Forage;
+        public string HarvestFrom;          // an existing crop whose harvest ResourceSO to reuse
+        public int Stages;                  // stage objects in the visual
+        public int Fruits;
+        public bool WildMesh;               // an own <Name>_Wild mesh, else the last stage
+        public string WildName;
+        public int WildCount;               // items per gather
+        public float WildSeedChance;
+        public bool WildIsTree;
+        public (string biome, float probability, float spacing)[] Spawns;
+    }
+
+    static readonly Spec[] Specs = {
+        new Spec {
+            Name = "Rye", Display = "Rye", Description = "Hardy dark grain that survives the cold.",
+            ProduceFolder = "Food/", ProduceIcon = IconUsable + "Rye.png", ProduceTemplate = "Food/Wheat",
+            SeedAsset = "RyeSeed", SeedName = "Rye seeds", SeedDescription = "It can be used for farming rye", SeedIcon = IconResources + "RyeSeed.png",
+            Food = Hearthglade.Core.Items.FoodType.Grain, Stack = 16,
+            Lifecycle = CropLifecycle.Annual, Plot = PlotType.Bed, SeedDrop = 0.5f, StageMinutes = new[] { 70, 90 }, MaxYield = 2,
+            Forage = ForageKind.Grain, HarvestFrom = "Wheat", Stages = 3, Fruits = 0, WildName = "WildRye", WildCount = 2, WildSeedChance = 0.4f,
+            Spawns = new[] { ("Taiga", 0.035f, 1.1f), ("Tundra", 0.02f, 1.1f) },
+        },
+        new Spec {
+            Name = "Potato", Display = "Potato", Description = "A starchy tuber that grows even in poor, cool soil.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "Potato.png", ProduceTemplate = "Usable/Apple",
+            SeedAsset = "PotatoSeed", SeedName = "Seed potatoes", SeedDescription = "It can be used for farming potatoes", SeedIcon = IconResources + "PotatoSeed.png",
+            Food = Hearthglade.Core.Items.FoodType.Vegetable, Thirst = 1, Hunger = 9, Health = 1,
+            Lifecycle = CropLifecycle.Annual, Plot = PlotType.Bed, SeedDrop = 0.4f, StageMinutes = new[] { 60, 80 }, MaxYield = 3,
+            Forage = ForageKind.Vegetable, HarvestFrom = "Carrot", Stages = 3, Fruits = 0, WildName = "WildPotato", WildCount = 2, WildSeedChance = 0.35f,
+            Spawns = new[] { ("Taiga", 0.015f, 1.3f), ("Forest", 0.02f, 1.3f) },
+        },
+        new Spec {
+            Name = "Cabbage", Display = "Cabbage", Description = "A heavy head of leaves, happy in cool, damp weather.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "Cabbage.png", ProduceTemplate = "Usable/Apple",
+            SeedAsset = "CabbageSeed", SeedName = "Cabbage seeds", SeedDescription = "It can be used for farming cabbages", SeedIcon = IconResources + "CabbageSeed.png",
+            Food = Hearthglade.Core.Items.FoodType.Vegetable, Thirst = 4, Hunger = 6, Health = 2,
+            Lifecycle = CropLifecycle.Annual, Plot = PlotType.Bed, SeedDrop = 0.4f, StageMinutes = new[] { 70, 100 }, MaxYield = 2,
+            Forage = ForageKind.Vegetable, HarvestFrom = "Carrot", Stages = 3, Fruits = 0, WildName = "WildCabbage", WildCount = 1, WildSeedChance = 0.45f,
+            Spawns = new[] { ("Forest", 0.02f, 1.4f) },
+        },
+        new Spec {
+            Name = "Lingonberry", Display = "Lingonberry", Description = "Tart red berries from a low evergreen shrub.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "Lingonberry.png", ProduceTemplate = "Usable/Strawberry",
+            SeedAsset = "LingonberrySeed", SeedName = "Lingonberry seeds", SeedDescription = "It can be used for farming lingonberries", SeedIcon = IconResources + "LingonberrySeed.png",
+            Food = Hearthglade.Core.Items.FoodType.Fruit, Thirst = 4, Hunger = 3, Health = 2,
+            Lifecycle = CropLifecycle.Perennial, Plot = PlotType.Bed, SeedDrop = 0.35f, StageMinutes = new[] { 100 }, MaxYield = 4, FruitRegrow = 100,
+            Forage = ForageKind.Berry, HarvestFrom = "Strawberry", Stages = 2, Fruits = 4, WildMesh = true, WildName = "WildLingonberry", WildCount = 3, WildSeedChance = 0.4f,
+            Spawns = new[] { ("Taiga", 0.03f, 1.3f), ("Tundra", 0.03f, 1.3f) },
+        },
+        new Spec {
+            Name = "Raspberry", Display = "Raspberry", Description = "Sweet and delicate; the canes love a damp, shady spot.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "Raspberry.png", ProduceTemplate = "Usable/Strawberry",
+            SeedAsset = "RaspberrySeed", SeedName = "Raspberry seeds", SeedDescription = "It can be used for farming raspberries", SeedIcon = IconResources + "RaspberrySeed.png",
+            Food = Hearthglade.Core.Items.FoodType.Fruit, Thirst = 4, Hunger = 4, Health = 1,
+            Lifecycle = CropLifecycle.Perennial, Plot = PlotType.Bed, SeedDrop = 0.35f, StageMinutes = new[] { 110 }, MaxYield = 3, FruitRegrow = 120,
+            Forage = ForageKind.Berry, HarvestFrom = "Strawberry", Stages = 2, Fruits = 3, WildMesh = true, WildName = "WildRaspberry", WildCount = 2, WildSeedChance = 0.4f,
+            Spawns = new[] { ("Forest", 0.025f, 1.3f), ("DenseForest", 0.03f, 1.3f) },
+        },
+        new Spec {
+            Name = "Pear", Display = "Pear", Description = "A juicy pear from your own orchard.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "Pear.png", ProduceTemplate = "Usable/Apple",
+            SeedAsset = "PearSapling", SeedName = "Pear sapling", SeedDescription = "It can be used for growing a pear tree", SeedIcon = IconResources + "PearSapling.png",
+            SeedTemplate = "Resources/AppleSapling",
+            Food = Hearthglade.Core.Items.FoodType.Fruit, Thirst = 5, Hunger = 7, Health = 1,
+            Lifecycle = CropLifecycle.Perennial, Plot = PlotType.Orchard, SeedDrop = 0.3f, StageMinutes = new[] { 400, 800 }, MaxYield = 6, FruitRegrow = 400,
+            Forage = ForageKind.Fruit, HarvestFrom = "AppleTree", Stages = 3, Fruits = 6, WildName = "WildPear", WildCount = 3, WildSeedChance = 0.5f, WildIsTree = true,
+            Spawns = new[] { ("Forest", 0.004f, 3f), ("DenseForest", 0.003f, 3f) },
+        },
+        new Spec {
+            Name = "OysterMushroom", Display = "Oyster Mushroom", Description = "Pale shelf mushrooms that fruit on a damp log.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "OysterMushroom.png", ProduceTemplate = "Usable/Apple",
+            SeedAsset = "OysterSpawn", SeedName = "Oyster mushroom spawn", SeedDescription = "It can be used for growing oyster mushrooms", SeedIcon = IconResources + "OysterSpawn.png",
+            Food = Hearthglade.Core.Items.FoodType.Vegetable, Thirst = 1, Hunger = 5, Health = 1,
+            Lifecycle = CropLifecycle.Perennial, Plot = PlotType.Bed, SeedDrop = 0.3f, StageMinutes = new[] { 50 }, MaxYield = 3, FruitRegrow = 90,
+            Forage = ForageKind.None, HarvestFrom = "Strawberry", Stages = 2, Fruits = 3, WildMesh = true, WildName = "WildOysterMushroom", WildCount = 2, WildSeedChance = 0.3f,
+            Spawns = new[] { ("DenseForest", 0.035f, 1.5f) },
+        },
+        new Spec {
+            Name = "Peas", Display = "Peas", Description = "Sweet green pods; the vines climb a trellis.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "Peas.png", ProduceTemplate = "Usable/Apple",
+            SeedAsset = "PeaSeed", SeedName = "Pea seeds", SeedDescription = "It can be used for farming peas on a trellis", SeedIcon = IconResources + "PeaSeed.png",
+            Food = Hearthglade.Core.Items.FoodType.Vegetable, Thirst = 2, Hunger = 6, Health = 2,
+            Lifecycle = CropLifecycle.Annual, Plot = PlotType.Trellis, SeedDrop = 0.4f, StageMinutes = new[] { 60, 80 }, MaxYield = 3,
+            Forage = ForageKind.Vegetable, HarvestFrom = "GrapeVine", Stages = 3, Fruits = 0, WildMesh = true, WildName = "WildPeas", WildCount = 2, WildSeedChance = 0.4f,
+            Spawns = new[] { ("Meadow", 0.02f, 1.3f), ("Forest", 0.02f, 1.3f) },
+        },
+        new Spec {
+            Name = "Sunflower", Display = "Sunflower", Description = "A big flower head full of oily seeds.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "Sunflower.png", ProduceTemplate = "Usable/Apple",
+            SeedAsset = "SunflowerSeed", SeedName = "Sunflower seeds", SeedDescription = "It can be used for farming sunflowers", SeedIcon = IconResources + "SunflowerSeed.png",
+            Food = Hearthglade.Core.Items.FoodType.Grain, Thirst = 0, Hunger = 4, Health = 0,
+            Lifecycle = CropLifecycle.Annual, Plot = PlotType.Bed, SeedDrop = 0.5f, StageMinutes = new[] { 80, 100 }, MaxYield = 2,
+            Forage = ForageKind.Grain, HarvestFrom = "Wheat", Stages = 3, Fruits = 0, WildName = "WildSunflower", WildCount = 1, WildSeedChance = 0.5f,
+            Spawns = new[] { ("Meadow", 0.03f, 1.4f) },
+        },
+        new Spec {
+            Name = "Corn", Display = "Corn", Description = "Tall stalks with golden cobs, thirsty for sun.",
+            ProduceFolder = "Usable/", ProduceIcon = IconUsable + "Corn.png", ProduceTemplate = "Usable/Apple",
+            SeedAsset = "CornSeed", SeedName = "Corn seeds", SeedDescription = "It can be used for farming corn", SeedIcon = IconResources + "CornSeed.png",
+            Food = Hearthglade.Core.Items.FoodType.Vegetable, Thirst = 2, Hunger = 9, Health = 1,
+            Lifecycle = CropLifecycle.Annual, Plot = PlotType.Bed, SeedDrop = 0.4f, StageMinutes = new[] { 90, 120 }, MaxYield = 3,
+            Forage = ForageKind.Grain, HarvestFrom = "Wheat", Stages = 3, Fruits = 0, WildName = "WildCorn", WildCount = 2, WildSeedChance = 0.4f,
+            Spawns = new[] { ("Meadow", 0.02f, 1.4f) },
+        },
+    };
+
+    public static void Build() {
+        try {
+            ImportIcons();
+            ImportModels();
+            AssetDatabase.Refresh();
+            foreach( var spec in Specs ) {
+                BuildOne( spec );
+            }
+            AssetDatabase.SaveAssets();
+            global::Editor.EditorScripts.RefreshItemsDatabase();
+            AssetDatabase.SaveAssets();
+            Debug.Log( "CropBatch1Builder: done" );
+        } catch( Exception e ) {
+            Debug.LogError( "CropBatch1Builder failed: " + e );
+            EditorApplication.Exit( 1 );
+        }
+    }
+
+    // ---- import ---------------------------------------------------------------------------------------------------
+
+    static void ImportIcons() {
+        var template = ( TextureImporter ) AssetImporter.GetAtPath( IconResources + "StrawberrySeed.png" );
+        var settings = new TextureImporterSettings();
+        template.ReadTextureSettings( settings );
+        var paths = new List<string>();
+        foreach( var spec in Specs ) {
+            paths.Add( spec.ProduceIcon );
+            paths.Add( spec.SeedIcon );
+        }
+        foreach( var path in paths.Distinct() ) {
+            AssetDatabase.ImportAsset( path, ImportAssetOptions.ForceSynchronousImport );
+            var importer = ( TextureImporter ) AssetImporter.GetAtPath( path );
+            importer.textureType = TextureImporterType.Sprite;
+            importer.SetTextureSettings( settings );
+            importer.textureCompression = template.textureCompression;
+            importer.compressionQuality = template.compressionQuality;
+            importer.maxTextureSize = template.maxTextureSize;
+            importer.SaveAndReimport();
+        }
+    }
+
+    static void ImportModels() {
+        foreach( var spec in Specs ) {
+            string path = ModelDir + spec.Name + ".fbx";
+            AssetDatabase.ImportAsset( path, ImportAssetOptions.ForceSynchronousImport );
+            var importer = ( ModelImporter ) AssetImporter.GetAtPath( path );
+            importer.materialImportMode = ModelImporterMaterialImportMode.None;
+            importer.isReadable = false;
+            importer.importCameras = false;
+            importer.importLights = false;
+            importer.importBlendShapes = false;
+            importer.generateSecondaryUV = false;
+            importer.meshCompression = ModelImporterMeshCompression.Off;
+            importer.animationType = ModelImporterAnimationType.None;
+            importer.importAnimation = false;
+            importer.SaveAndReimport();
+        }
+    }
+
+    // ---- one crop -------------------------------------------------------------------------------------------------
+
+    static void BuildOne( Spec spec ) {
+        var meshes = LoadMeshes( spec.Name );
+        var material = AssetDatabase.LoadAssetAtPath<Material>( MaterialPath );
+
+        var produce = CreateItem( ItemsDir + spec.ProduceFolder + spec.Name + ".asset", ItemsDir + spec.ProduceTemplate + ".asset", so => {
+            Set( so, "itemName", spec.Display );
+            Set( so, "itemDescription", spec.Description );
+            Set( so, "maxItemsInStack", spec.Stack );
+            SetIcon( so, spec.ProduceIcon );
+            Set( so, "foodType", ( int ) spec.Food );
+            Set( so, "NutritionQuality", 1f );
+            // a plain ingredient (Rye, from the Wheat template) has no healing fields
+            Set( so, "thirstHealing", spec.Thirst, optional: true );
+            Set( so, "hungerHealing", spec.Hunger, optional: true );
+            Set( so, "healthHealing", spec.Health, optional: true );
+        } );
+        var seed = CreateItem( ItemsDir + "Resources/" + spec.SeedAsset + ".asset", ItemsDir + ( spec.SeedTemplate ?? "Resources/StrawberrySeed" ) + ".asset", so => {
+            Set( so, "itemName", spec.SeedName );
+            Set( so, "itemDescription", spec.SeedDescription );
+            SetIcon( so, spec.SeedIcon );
+        } );
+
+        // the world plant
+        var wildResource = CopyScriptable<ResourceSO>( WildResourceDir + spec.WildName + ".asset",
+            WildResourceDir + ( spec.WildIsTree ? "WildAppleTree" : "Carrot" ) + ".asset", so => {
+                Set( so, "ItemSoOnGather", produce );
+                Set( so, "BonusItem", seed );
+                Set( so, "BonusChance", spec.WildSeedChance );
+                Set( so, "ToolTipMessage", spec.Display );
+                Set( so, "NumOfItemsOnGather", spec.WildCount );
+            } );
+        string wildMeshName = spec.WildMesh ? spec.Name + "_Wild" : null;
+        var wildPrefab = BuildWildPrefab( spec, meshes, material, wildResource, wildMeshName );
+
+        // the cultivated plant
+        var visual = BuildCropVisual( spec, meshes, material );
+        var crop = AssetDatabase.LoadAssetAtPath<CropSO>( CropDir + spec.Name + ".asset" );
+        if( crop == null ) {
+            crop = ScriptableObject.CreateInstance<CropSO>();
+            AssetDatabase.CreateAsset( crop, CropDir + spec.Name + ".asset" );
+        }
+        crop.lifecycle = spec.Lifecycle;
+        crop.plotType = spec.Plot;
+        crop.seed = seed;
+        crop.produce = produce;
+        crop.seedDropChance = spec.SeedDrop;
+        crop.stageMinutes = spec.StageMinutes;
+        crop.maxYield = spec.MaxYield;
+        crop.fruitRegrowMinutes = spec.FruitRegrow;
+        crop.visualPrefab = visual;
+        crop.harvest = AssetDatabase.LoadAssetAtPath<CropSO>( CropDir + spec.HarvestFrom + ".asset" ).harvest;
+        crop.forageKind = spec.Forage;
+        EditorUtility.SetDirty( crop );
+
+        foreach( var ( biome, probability, spacing ) in spec.Spawns ) {
+            AddSpawn( BiomeDir + biome + ".asset", wildPrefab, probability, spacing );
+        }
+        Debug.Log( $"CropBatch1Builder: {spec.Name} ok" );
+    }
+
+    static Dictionary<string, Mesh> LoadMeshes( string name ) {
+        var meshes = AssetDatabase.LoadAllAssetsAtPath( ModelDir + name + ".fbx" ).OfType<Mesh>().ToDictionary( m => m.name, m => m );
+        Debug.Log( $"CropBatch1Builder: {name}.fbx meshes: {string.Join( ", ", meshes.Keys )}" );
+        return meshes;
+    }
+
+    // ---- prefabs --------------------------------------------------------------------------------------------------
+
+    static GameObject BuildWildPrefab( Spec spec, Dictionary<string, Mesh> meshes, Material material, ResourceSO resource, string wildMeshName ) {
+        var mesh = wildMeshName != null ? meshes[ wildMeshName ] : meshes[ StageMeshName( spec, spec.Stages - 1 ) ];
+        var root = new GameObject( spec.WildName ) { layer = ObjectLayer, tag = "SaveableObject" };
+        var model = NewChild( root.transform, "Model", mesh, material );
+        // a wild plant without its own mesh is the mature stage
+        if( wildMeshName == null && spec.Fruits > 0 ) {
+            for( int i = 0; i < spec.Fruits; i++ ) {
+                NewChild( root.transform, "Fruit" + i, meshes[ spec.Name + "_Fruit" + i ], material );
+            }
+        }
+        var bounds = mesh.bounds;
+        if( spec.WildIsTree ) {
+            var capsule = root.AddComponent<CapsuleCollider>();
+            capsule.radius = 0.12f;
+            capsule.height = 0.7f;
+            capsule.center = new Vector3( 0f, 0.35f, 0f );
+        } else {
+            var box = root.AddComponent<BoxCollider>();
+            var size = bounds.size;
+            size.x = Mathf.Max( size.x, 0.12f );
+            size.z = Mathf.Max( size.z, 0.12f );
+            size.y = Mathf.Max( size.y, 0.1f );
+            box.size = size;
+            box.center = new Vector3( bounds.center.x, bounds.center.y, bounds.center.z );
+        }
+        var res = root.AddComponent<Hearthglade.Gameplay.Resource.Resource>();
+        var so = new SerializedObject( res );
+        so.FindProperty( "resourceSO" ).objectReferenceValue = resource;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        string path = PrefabDir + spec.WildName + ".prefab";
+        var prefab = PrefabUtility.SaveAsPrefabAsset( root, path );
+        UnityEngine.Object.DestroyImmediate( root );
+        return prefab;
+    }
+
+    static string StageMeshName( Spec spec, int stage ) {
+        // a single mesh serves every growth stage of the tree
+        return spec.Plot == PlotType.Orchard ? spec.Name + "_Tree" : spec.Name + "_Stage" + stage;
+    }
+
+    static GameObject BuildCropVisual( Spec spec, Dictionary<string, Mesh> meshes, Material material ) {
+        var root = new GameObject( spec.Name + "Crop" ) { layer = ObjectLayer };
+        bool orchard = spec.Plot == PlotType.Orchard;
+        var origin = orchard ? new Vector3( CellHalf, OrchardY, CellHalf ) : spec.Plot == PlotType.Trellis ? Vector3.zero : new Vector3( 0f, BedY, 0f );
+        var stageScales = orchard ? new[] { 0.257f, 0.57f, 1f } : new[] { 1f, 1f, 1f, 1f };
+
+        var stages = new List<GameObject>();
+        for( int i = 0; i < spec.Stages; i++ ) {
+            var go = NewChild( root.transform, "Stage" + i, meshes[ StageMeshName( spec, i ) ], material );
+            go.transform.localPosition = origin;
+            go.transform.localScale = Vector3.one * stageScales[ i ];
+            go.SetActive( i == spec.Stages - 1 );
+            stages.Add( go );
+        }
+        var fruits = new List<GameObject>();
+        for( int i = 0; i < spec.Fruits; i++ ) {
+            var go = NewChild( root.transform, "Fruit" + i, meshes[ spec.Name + "_Fruit" + i ], material );
+            go.transform.localPosition = origin;
+            fruits.Add( go );
+        }
+        var visual = root.AddComponent<CropVisual>();
+        var so = new SerializedObject( visual );
+        FillArray( so.FindProperty( "stages" ), stages );
+        FillArray( so.FindProperty( "fruits" ), fruits );
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        var prefab = PrefabUtility.SaveAsPrefabAsset( root, PrefabDir + spec.Name + "Crop.prefab" );
+        UnityEngine.Object.DestroyImmediate( root );
+        return prefab;
+    }
+
+    static GameObject NewChild( Transform parent, string name, Mesh mesh, Material material ) {
+        var go = new GameObject( name ) { layer = ObjectLayer };
+        go.transform.SetParent( parent, false );
+        go.AddComponent<MeshFilter>().sharedMesh = mesh;
+        go.AddComponent<MeshRenderer>().sharedMaterial = material;
+        return go;
+    }
+
+    static void FillArray( SerializedProperty array, List<GameObject> objects ) {
+        array.arraySize = objects.Count;
+        for( int i = 0; i < objects.Count; i++ ) {
+            array.GetArrayElementAtIndex( i ).objectReferenceValue = objects[ i ];
+        }
+    }
+
+    // ---- assets ---------------------------------------------------------------------------------------------------
+
+    static Hearthglade.Gameplay.Items.ItemSO CreateItem( string path, string templatePath, Action<SerializedObject> edit ) {
+        return CopyScriptable<Hearthglade.Gameplay.Items.ItemSO>( path, templatePath, edit );
+    }
+
+    static T CopyScriptable<T>( string path, string templatePath, Action<SerializedObject> edit ) where T : ScriptableObject {
+        if( AssetDatabase.LoadAssetAtPath<T>( path ) == null ) {
+            if( !AssetDatabase.CopyAsset( templatePath, path ) ) {
+                throw new Exception( $"cannot copy {templatePath} to {path}" );
+            }
+        }
+        var asset = AssetDatabase.LoadAssetAtPath<T>( path );
+        var so = new SerializedObject( asset );
+        edit( so );
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty( asset );
+        return asset;
+    }
+
+    static void Set( SerializedObject so, string field, object value, bool optional = false ) {
+        var p = so.FindProperty( field );
+        if( p == null ) {
+            if( optional ) {
+                return;
+            }
+            throw new Exception( $"{so.targetObject.name}: no field {field}" );
+        }
+        switch( value ) {
+            case string s: p.stringValue = s; break;
+            case int i when p.propertyType == SerializedPropertyType.Enum: p.enumValueFlag = i; break;
+            case int i: p.intValue = i; break;
+            case float f: p.floatValue = f; break;
+            case UnityEngine.Object o: p.objectReferenceValue = o; break;
+            default: throw new Exception( $"{field}: unsupported {value.GetType()}" );
+        }
+    }
+
+    static void SetIcon( SerializedObject so, string pngPath ) {
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>( pngPath );
+        if( sprite == null ) {
+            throw new Exception( "no sprite at " + pngPath );
+        }
+        so.FindProperty( "icon" ).objectReferenceValue = sprite;
+    }
+
+    static void AddSpawn( string biomePath, GameObject prefab, float probability, float spacing ) {
+        var biome = AssetDatabase.LoadAssetAtPath<ScriptableObject>( biomePath );
+        var so = new SerializedObject( biome );
+        var list = so.FindProperty( "Resources" );
+        for( int i = 0; i < list.arraySize; i++ ) {
+            if( list.GetArrayElementAtIndex( i ).FindPropertyRelative( "resourcePrefab" ).objectReferenceValue == prefab ) {
+                return;     // already there
+            }
+        }
+        // start from the last entry (all its other fields are plain defaults for a single object), then override
+        int index = list.arraySize;
+        list.arraySize = index + 1;
+        var e = list.GetArrayElementAtIndex( index );
+        e.FindPropertyRelative( "resourcePrefab" ).objectReferenceValue = prefab;
+        e.FindPropertyRelative( "howManyResourcesSpawn" ).intValue = 1;
+        e.FindPropertyRelative( "spawnProbability" ).floatValue = probability;
+        e.FindPropertyRelative( "spawnRange" ).floatValue = 0.3f;
+        e.FindPropertyRelative( "minRotation" ).floatValue = 0f;
+        e.FindPropertyRelative( "maxRotation" ).floatValue = 360f;
+        e.FindPropertyRelative( "densityFrom" ).floatValue = 0f;
+        e.FindPropertyRelative( "densityTo" ).floatValue = 0f;
+        e.FindPropertyRelative( "water" ).enumValueIndex = 0;
+        e.FindPropertyRelative( "minStartDistance" ).floatValue = 0f;
+        e.FindPropertyRelative( "startDistanceRamp" ).floatValue = 0f;
+        e.FindPropertyRelative( "minSpacing" ).floatValue = spacing;
+        e.FindPropertyRelative( "clusterSpacing" ).intValue = 0;
+        e.FindPropertyRelative( "clusterMin" ).intValue = 3;
+        e.FindPropertyRelative( "clusterMax" ).intValue = 6;
+        e.FindPropertyRelative( "clusterRadius" ).floatValue = 1.5f;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty( biome );
+    }
+
+    // ---- preview (temporary) --------------------------------------------------------------------------------------
+
+    const string PreviewDir = "C:/Users/Lukasz/AppData/Local/Temp/claude/e--Repos-Hearthglade/048c5bb8-968d-436a-97cb-3a7f1306ec78/scratchpad/";
+
+    public static void Preview() {
+        RenderCrop( "Wheat", PlotType.Bed, 3, false, "WarmUp" );   // the first render of a session has shaders still compiling
+        try {
+            foreach( var spec in Specs ) {
+                RenderCrop( spec.Name, spec.Plot, spec.Stages, spec.Fruits > 0 );
+            }
+
+            Debug.Log( "CropBatch1Builder: previews done" );
+        } catch( Exception e ) {
+            Debug.LogError( "Preview failed: " + e );
+            EditorApplication.Exit( 1 );
+        }
+    }
+
+    static void RenderCrop( string cropName, PlotType plotType, int stages, bool hasFruit, string fileName = null ) {
+        string plotPath = plotType == PlotType.Bed ? "Assets/_Prefabs/GardenPatch/GardenPatch.prefab"
+            : plotType == PlotType.Orchard ? PrefabDir + "OrchardPlot.prefab" : PrefabDir + "Trellis.prefab";
+        string cropPath = cropName == "Wheat" ? "Assets/_Prefabs/Environment/Crops/WheatCrop.prefab" : PrefabDir + cropName + "Crop.prefab";
+        var plot = AssetDatabase.LoadAssetAtPath<GameObject>( plotPath );
+        var crop = AssetDatabase.LoadAssetAtPath<GameObject>( cropPath );
+        var root = new GameObject( "PreviewRoot" );
+        float step = plotType == PlotType.Orchard ? 0.9f : 0.5f;
+        for( int i = 0; i < stages; i++ ) {
+            var pos = new Vector3( i * step, 0f, 0f );
+            var p = ( GameObject ) PrefabUtility.InstantiatePrefab( plot, root.transform );
+            p.transform.position = pos;
+            foreach( var mb in p.GetComponentsInChildren<MonoBehaviour>() ) { mb.enabled = false; }
+            var c = ( GameObject ) PrefabUtility.InstantiatePrefab( crop, root.transform );
+            c.transform.position = pos;
+            var visual = c.GetComponent<CropVisual>();
+            var so = new SerializedObject( visual );
+            var stageArr = so.FindProperty( "stages" );
+            for( int s = 0; s < stageArr.arraySize; s++ ) {
+                ( ( GameObject ) stageArr.GetArrayElementAtIndex( s ).objectReferenceValue ).SetActive( s == i );
+            }
+            var fruitArr = so.FindProperty( "fruits" );
+            for( int f = 0; f < fruitArr.arraySize; f++ ) {
+                ( ( GameObject ) fruitArr.GetArrayElementAtIndex( f ).objectReferenceValue ).SetActive( i == stages - 1 );
+            }
+        }
+        var ground = GameObject.CreatePrimitive( PrimitiveType.Cube );
+        ground.transform.SetParent( root.transform );
+        ground.transform.position = new Vector3( ( stages - 1 ) * step * 0.5f, -0.05f, 0f );
+        ground.transform.localScale = new Vector3( stages * step + 0.6f, 0.1f, 1.2f );
+        var groundMat = new Material( Shader.Find( "Universal Render Pipeline/Lit" ) ?? Shader.Find( "Standard" ) );
+        groundMat.color = new Color( 0.45f, 0.6f, 0.3f );
+        ground.GetComponent<MeshRenderer>().sharedMaterial = groundMat;
+
+        var lightGo = new GameObject( "Light" );
+        var light = lightGo.AddComponent<Light>();
+        light.type = LightType.Directional;
+        light.intensity = 1.2f;
+        lightGo.transform.rotation = Quaternion.Euler( 50f, -30f, 0f );
+
+        var camGo = new GameObject( "Cam" );
+        var cam = camGo.AddComponent<Camera>();
+        cam.clearFlags = CameraClearFlags.SolidColor;
+        cam.backgroundColor = new Color( 0.72f, 0.82f, 0.86f );
+        cam.fieldOfView = 30f;
+        float cx = ( stages - 1 ) * step * 0.5f;
+        float height = plotType == PlotType.Orchard ? 0.35f : 0.18f;
+        float dist = ( stages * step + 0.4f ) * 1.15f;
+        camGo.transform.position = new Vector3( cx, height + dist * 0.45f, -dist * 0.8f );
+        camGo.transform.LookAt( new Vector3( cx, height * 0.7f, 0.1f ) );
+        var rt = new RenderTexture( 1400, 560, 24 );
+        cam.targetTexture = rt;
+        cam.Render();
+        RenderTexture.active = rt;
+        var tex = new Texture2D( rt.width, rt.height, TextureFormat.RGB24, false );
+        tex.ReadPixels( new Rect( 0, 0, rt.width, rt.height ), 0, 0 );
+        tex.Apply();
+        File.WriteAllBytes( PreviewDir + "unity_" + ( fileName ?? cropName ) + ".png", tex.EncodeToPNG() );
+        RenderTexture.active = null;
+        UnityEngine.Object.DestroyImmediate( root );
+        UnityEngine.Object.DestroyImmediate( lightGo );
+        UnityEngine.Object.DestroyImmediate( camGo );
+        UnityEngine.Object.DestroyImmediate( rt );
+    }
+}
