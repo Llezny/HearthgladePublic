@@ -19,6 +19,8 @@ namespace Hearthglade.Gameplay.Resource
 
         [ SerializeField ] public ResourceSO resourceSO;
 
+        // Prop variant of a prefab (a Prefab Variant with this ticked): it looks and blocks like the original but cannot be gathered.
+        [ SerializeField ] private bool isProp;
 
         [field: SerializeField] public bool IsCurrentlyGathered { get; protected set; }
         public string TooltipTitle => resourceSO.name;
@@ -75,6 +77,9 @@ namespace Hearthglade.Gameplay.Resource
         }
         
         public override bool CanInteract( ) {
+            if( isProp ) {
+                return false;
+            }
             bool requiredItemCondition() => resourceSO.RequiredItem == null || inventoryService.HasItem( resourceSO.RequiredItem );
             // Gathering is refused while the yield would not fit, so nothing is lost.
             bool hasRoom() => resourceSO.ItemSoOnGather == null || inventoryService.CanFit( resourceSO.ItemSoOnGather, resourceSO.NumOfItemsOnGather );

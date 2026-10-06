@@ -83,6 +83,20 @@ namespace Hearthglade.Core.Tests {
         }
 
         [ Test ]
+        public void MaxStartDistance_IsAHardStepOrAFade( ) {
+            var step = Plain( 1f );
+            step.MaxStartDistance = 30f;
+            Assert.AreEqual( 20000, Count( step, new ResourceContext { StartDistance = 30f } ) );
+            Assert.AreEqual( 0, Count( step, new ResourceContext { StartDistance = 31f } ) );
+
+            var fade = step;
+            fade.MaxStartDistanceFade = 20f;
+            Assert.AreEqual( 20000, Count( fade, new ResourceContext { StartDistance = 10f } ) );
+            Assert.AreEqual( 0.5, Count( fade, new ResourceContext { StartDistance = 20f } ) / 20000.0, 0.02 );
+            Assert.AreEqual( 0, Count( fade, new ResourceContext { StartDistance = 30f } ) );
+        }
+
+        [ Test ]
         public void Weight_ThinsTheTableOutProportionally( ) {
             var rule = Plain( 0.6f );
             var context = ResourceContext.Neutral;

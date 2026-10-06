@@ -33,6 +33,12 @@ namespace Hearthglade.Core.World {
         /// <summary>Over this many further cells the probability rises from 0 to full (0 = a hard step).</summary>
         public float StartDistanceRamp;
 
+        /// <summary>The resource does not grow farther from the start than this many cells (0 = no limit).</summary>
+        public float MaxStartDistance;
+
+        /// <summary>Over this many cells before <see cref="MaxStartDistance"/> the probability falls from full to 0 (0 = a hard step).</summary>
+        public float MaxStartDistanceFade;
+
         /// <summary>
         /// Above 0 the rule makes deposits instead of single spawns: the map is cut into squares of this many cells,
         /// each holds a deposit with <see cref="Probability"/>, and a deposit is <see cref="ClusterMin"/>..<see cref="ClusterMax"/>
@@ -191,6 +197,11 @@ namespace Hearthglade.Core.World {
                 factor *= rule.StartDistanceRamp > 0f
                     ? Clamp01( ( context.StartDistance - rule.MinStartDistance ) / rule.StartDistanceRamp )
                     : ( context.StartDistance >= rule.MinStartDistance ? 1f : 0f );
+            }
+            if( rule.MaxStartDistance > 0f ) {
+                factor *= rule.MaxStartDistanceFade > 0f
+                    ? Clamp01( ( rule.MaxStartDistance - context.StartDistance ) / rule.MaxStartDistanceFade )
+                    : ( context.StartDistance <= rule.MaxStartDistance ? 1f : 0f );
             }
             return factor;
         }

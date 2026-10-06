@@ -20,7 +20,7 @@ namespace Hearthglade.EditorTools
         private const float ModelFlip = 180f;
 
         // How a prop collides: the box is given in the prop's own metres (centre, size). Null = no collider (the player may walk over it).
-        private struct Spec
+        internal struct Spec
         {
             public string Name;
             public Vector3? ColliderCenter;
@@ -30,11 +30,11 @@ namespace Hearthglade.EditorTools
         }
 
         // Models are drawn for the player's size 0.3 m; Scale brings them up to it (the walls the player builds are 0.735 m high).
-        private static Spec Solid( string name, Vector3 center, Vector3 size, float scale ) => new Spec { Name = name, ColliderCenter = center, ColliderSize = size, Scale = scale };
+        internal static Spec Solid( string name, Vector3 center, Vector3 size, float scale ) => new Spec { Name = name, ColliderCenter = center, ColliderSize = size, Scale = scale };
 
-        private static Spec Walkable( string name, float scale = 1f ) => new Spec { Name = name, Scale = scale };
+        internal static Spec Walkable( string name, float scale = 1f ) => new Spec { Name = name, Scale = scale };
 
-        private static readonly Spec[] Specs =
+        internal static readonly Spec[] Specs =
         {
             Solid( "HarborStallFruit", new Vector3( 0f, 0.07f, -0.07f ), new Vector3( 0.62f, 0.14f, 0.15f ), 1.7f ),
             Solid( "HarborStallHerbs", new Vector3( 0f, 0.07f, -0.07f ), new Vector3( 0.62f, 0.14f, 0.15f ), 1.7f ),
@@ -93,9 +93,9 @@ namespace Hearthglade.EditorTools
             UnityEngine.Debug.Log( $"[HarborAssetBuilder] {prefabs.Count} harbour prefabs are ready" );
         }
 
-        private static void ImportModels()
+        internal static void ImportModels( string folder = ModelFolder )
         {
-            foreach( var guid in AssetDatabase.FindAssets( "t:Model", new[] { ModelFolder } ) )
+            foreach( var guid in AssetDatabase.FindAssets( "t:Model", new[] { folder } ) )
             {
                 var path = AssetDatabase.GUIDToAssetPath( guid );
                 if( AssetImporter.GetAtPath( path ) is not ModelImporter importer )
@@ -142,7 +142,7 @@ namespace Hearthglade.EditorTools
         }
 
         // Orientation, scale and collider of a prop; applied in place so that existing prefabs keep their guids.
-        private static void Fit( GameObject root, Spec spec )
+        internal static void Fit( GameObject root, Spec spec )
         {
             var visual = root.transform.Find( "Model" );
             visual.localRotation = Quaternion.Euler( 0f, spec.ModelYaw + ModelFlip, 0f );
@@ -151,7 +151,7 @@ namespace Hearthglade.EditorTools
             {
                 return;
             }
-            var collider = root.GetComponent<BoxCollider>() ?? root.AddComponent<BoxCollider>();
+            var collider = root.TryGetComponent<BoxCollider>( out var existing ) ? existing : root.AddComponent<BoxCollider>();
             collider.center = spec.ColliderCenter.Value * spec.Scale;
             collider.size = spec.ColliderSize * spec.Scale;
         }

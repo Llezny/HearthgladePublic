@@ -38,6 +38,10 @@ namespace Hearthglade.Gameplay.Environment.Block.Base
         public float minStartDistance = 0f;
         [Tooltip("Cells over which the chance rises from 0 to full after Min Start Distance (0 = a hard step).")]
         public float startDistanceRamp = 0f;
+        [Tooltip("Cells from the player's start above which the resource does not grow (0 = no limit).")]
+        [Min(0f)] public float maxStartDistance = 0f;
+        [Tooltip("Cells before Max Start Distance over which the chance falls from full to 0 (0 = a hard step).")]
+        [Min(0f)] public float maxStartDistanceFade = 0f;
 
         [Header("Climate niche")]
         [Tooltip("Grow only where temperature and humidity (world scale -1 cold/dry .. 1 hot/wet) suit the plant: full chance inside the ranges, falling to 0 over 0.3 outside.")]
@@ -79,6 +83,8 @@ namespace Hearthglade.Gameplay.Environment.Block.Base
                 Water = water,
                 MinStartDistance = minStartDistance,
                 StartDistanceRamp = startDistanceRamp,
+                MaxStartDistance = maxStartDistance,
+                MaxStartDistanceFade = maxStartDistanceFade,
                 ClusterSpacing = clusterSpacing,
                 ClusterMin = clusterMin,
                 ClusterMax = clusterMax,

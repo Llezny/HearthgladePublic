@@ -503,4 +503,5 @@ def main():
     render_sheet(objects, PREVIEW_PATH)
 
 
-main()
+if __name__ == "__main__":
+    main()
