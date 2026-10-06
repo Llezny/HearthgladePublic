@@ -7,6 +7,9 @@
 **A cozy-but-unforgiving survival game for mobile, built in Unity.**
 Wake up on a procedurally generated island, gather what the land gives you, craft your tools, build a shelter, grow a garden, and cook a decent meal. Then sail out to discover new islands, harbours and traders.
 
+[![Sync public repo](https://github.com/Llezny/Hearthglade/actions/workflows/sync-public.yml/badge.svg)](https://github.com/Llezny/Hearthglade/actions/workflows/sync-public.yml)  
+[![Hearthglade.Core tests (nightly)](https://github.com/Llezny/Hearthglade/actions/workflows/core-tests-nightly.yml/badge.svg)](https://github.com/Llezny/Hearthglade/actions/workflows/core-tests-nightly.yml)
+
 ## Features
 
 <table>
