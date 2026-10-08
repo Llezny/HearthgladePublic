@@ -10,6 +10,8 @@ using VContainer;
 
 namespace Hearthglade.Gameplay.Player {
     public class ClickToInteractBehaviour : MonoBehaviour {
+        // Screen pixels; a quick finger that moved further than this is a flick, not a tap.
+        private const float TapMaxTravel = 30f;
 
         private PlayerController playerController;
         private InteractBehaviour interactBehaviour;
@@ -42,6 +44,7 @@ namespace Hearthglade.Gameplay.Player {
 
         private void OnEnable( ) {
             LeanTouch.OnFingerDown += HandleFingerDown;
+            LeanTouch.OnFingerTap += HandleFingerTap;
             if ( playerController != null ) {
                 playerController.OnAutoMoveCancelledByInput += HandleAutoMoveCancelledByInput;
             }
@@ -49,6 +52,7 @@ namespace Hearthglade.Gameplay.Player {
 
         private void OnDisable( ) {
             LeanTouch.OnFingerDown -= HandleFingerDown;
+            LeanTouch.OnFingerTap -= HandleFingerTap;
             if ( playerController != null ) {
                 playerController.OnAutoMoveCancelledByInput -= HandleAutoMoveCancelledByInput;
             }
@@ -63,16 +67,24 @@ namespace Hearthglade.Gameplay.Player {
                 return;
             }
 
-            var toTarget = currentTargetTransform.position - transform.position;
-            toTarget.y = 0f;
-
-            var interactionDistance = currentTarget.InteractionDistance;
-            if ( toTarget.sqrMagnitude <= interactionDistance * interactionDistance ) {
+            var toTarget = FlatVectorToTarget( );
+            if ( IsInInteractionRange( toTarget ) ) {
                 TriggerInteractionAndStop( );
                 return;
             }
 
             playerController.SetAutoMoveVector( toTarget.normalized );
+        }
+
+        private Vector3 FlatVectorToTarget( ) {
+            var toTarget = currentTargetTransform.position - transform.position;
+            toTarget.y = 0f;
+            return toTarget;
+        }
+
+        private bool IsInInteractionRange( Vector3 flatToTarget ) {
+            var interactionDistance = currentTarget.InteractionDistance;
+            return flatToTarget.sqrMagnitude <= interactionDistance * interactionDistance;
         }
 
         private void HandleFingerDown( LeanFinger finger ) {
@@ -84,8 +96,22 @@ namespace Hearthglade.Gameplay.Player {
             }
 
             CancelAutoWalk( );
+        }
 
-            var ray = mainCamera.ScreenPointToRay( Input.mousePosition );
+        // Interaction fires on release: the floating joystick covers the whole screen, so a press that
+        // starts on a scene object may just as well be the start of a joystick drag.
+        private void HandleFingerTap( LeanFinger finger ) {
+            if ( finger.StartedOverGui || MenuManager.isGamePaused ) {
+                return;
+            }
+            if ( gameManager != null && gameState != null && gameManager.CurrentState != gameState ) {
+                return;
+            }
+            if ( ( finger.ScreenPosition - finger.StartScreenPosition ).sqrMagnitude > TapMaxTravel * TapMaxTravel ) {
+                return;
+            }
+
+            var ray = mainCamera.ScreenPointToRay( finger.ScreenPosition );
             if ( !Physics.Raycast( ray, out var hit, 100, clickableLayerMask ) ) {
                 return;
             }
@@ -107,6 +133,11 @@ namespace Hearthglade.Gameplay.Player {
         private void BeginAutoWalk( IInteractable target ) {
             currentTarget = target;
             currentTargetTransform = target.GetTransform( );
+            // Already close enough: interact right away instead of starting a run that would end on the next tick.
+            if ( IsInInteractionRange( FlatVectorToTarget( ) ) ) {
+                TriggerInteractionAndStop( );
+                return;
+            }
             playerController.BeginAutoMove( );
         }
 

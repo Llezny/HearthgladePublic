@@ -304,6 +304,11 @@ namespace Hearthglade.Gameplay.Player.Controller
             }
         }
 
+        // The joystick appearing means the press was a drag, not a long press on a scene object.
+        public void HideTooltip( ) {
+            tooltipManager.HideToolTip( );
+        }
+
         public void SetMoveVector( Vector2 joystickMoveVector ) {
             lastJoystickInput = joystickMoveVector;
             if ( IsAutoMoving ) {
@@ -328,8 +333,10 @@ namespace Hearthglade.Gameplay.Player.Controller
             if ( moveVector == Vector3.zero && desiredMoveDirection != Vector3.zero ) {
                 StartWalking( );
             }
-            else if ( moveVector != Vector3.zero && desiredMoveDirection == Vector3.zero ) {
+            else if ( desiredMoveDirection == Vector3.zero && ( moveVector != Vector3.zero || IsWalking ) ) {
+                // Also when moveVector is already zero but a killed deceleration tween left IsWalking set.
                 StopWalking( );
+                MovementSpeedChanged?.Invoke( 0f );
             }
 
             if ( moveVector != desiredMoveDirection ) {
@@ -358,6 +365,11 @@ namespace Hearthglade.Gameplay.Player.Controller
             }
             IsAutoMoving = false;
             KillDecelerationTween( );
+            // Nothing to decelerate from: a tween here only leaves a window in which killing it strands the run animation.
+            if ( moveVector == Vector3.zero ) {
+                FinalizeStop( );
+                return;
+            }
             decelerationTween = DOTween.To(
                 () => moveVector,
                 v => moveVector = v,
