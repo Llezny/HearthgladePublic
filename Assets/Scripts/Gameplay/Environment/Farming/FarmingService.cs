@@ -6,8 +6,7 @@ using Hearthglade.Core.World;
 using Hearthglade.Gameplay.Audio;
 using Hearthglade.Gameplay.Common;
 using Hearthglade.Gameplay.Map;
-using Hearthglade.Gameplay.Player.Stats;
-using Hearthglade.Gameplay.Resource;
+using Hearthglade.Gameplay.Player;
 using Hearthglade.Gameplay.UI.HUD;
 using Hearthglade.Gameplay.UI.HUD.Messages;
 using Hearthglade.Gameplay.UI.Menu.Inventory;
@@ -26,8 +25,8 @@ namespace Hearthglade.Gameplay.Environment.Farming
         private readonly CropCatalog crops;
         private readonly InventoryService inventory;
         private readonly ClockManager clockManager;
-        private readonly PlayerStatsComponent playerStats;
-        private readonly AudioManager audioManager;
+        private readonly PlayerToolService tools;
+        private readonly ISfxPlayer sfx;
         private readonly MessagePopup messagePopup;
         private readonly DeterministicRandom random = new( ( int ) DateTime.UtcNow.Ticks );
         private readonly List<Plot> plots = new();
@@ -35,14 +34,14 @@ namespace Hearthglade.Gameplay.Environment.Farming
 
         [ Inject ]
         public FarmingService( MapManager mapManager, IWorldClock clock, CropCatalog crops, InventoryService inventory,
-            ClockManager clockManager, PlayerStatsComponent playerStats, AudioManager audioManager, MessagePopup messagePopup ) {
+            ClockManager clockManager, PlayerToolService tools, ISfxPlayer sfx, MessagePopup messagePopup ) {
             this.mapManager = mapManager;
             this.clock = clock;
             this.crops = crops;
             this.inventory = inventory;
             this.clockManager = clockManager;
-            this.playerStats = playerStats;
-            this.audioManager = audioManager;
+            this.tools = tools;
+            this.sfx = sfx;
             this.messagePopup = messagePopup;
         }
 
@@ -138,11 +137,23 @@ namespace Hearthglade.Gameplay.Environment.Farming
             _ => "",
         };
 
-        public float GatheringSeconds( CropSO crop ) => GatheringTime.Seconds( crop != null ? crop.harvest : null, playerStats );
+        public float GatheringSeconds( CropSO crop ) => tools.GatherSeconds( crop != null ? crop.harvest : null );
 
-        public void BeginGathering() => clockManager.SetTimeScale( 2 );
+        public void BeginGathering( CropSO crop ) {
+            tools.Begin( crop != null ? crop.harvest : null );
+            clockManager.SetTimeScale( 2 );
+        }
 
-        public void EndGathering() => clockManager.ResetTimeScale();
+        // `harvested`: the work was done, so the tool in use wears down; otherwise it was cancelled.
+        public void EndGathering( bool harvested = false ) {
+            clockManager.ResetTimeScale();
+            if( harvested ) {
+                tools.Complete();
+            }
+            else {
+                tools.Cancel();
+            }
+        }
 
         public int OwnedSeeds( CropSO crop ) => crop.seed == null ? 0 : inventory.Count( crop.seed.Id );
 
@@ -183,7 +194,7 @@ namespace Hearthglade.Gameplay.Environment.Farming
                 inventory.AddItem( crop.seed, result.SeedQuantity );
             }
             if( crop.harvest != null ) {
-                audioManager.Play( crop.harvest.OnPickup );
+                sfx.Play( crop.harvest.OnPickup );
             }
             return true;
         }

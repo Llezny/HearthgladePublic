@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hearthglade.Core.Items;
 using Hearthglade.Gameplay.Database;
 using Hearthglade.Gameplay.Items;
 using Hearthglade.Gameplay.UI.Menu.Inventory;
@@ -61,7 +62,7 @@ namespace Hearthglade.Gameplay.UI.Menu.Crafting
             nameText.text = Item.itemName;
             descriptionText.text = Item.itemDescription;
             timeText.text = FormatSeconds( recipe.craftTime );
-            extraText.text = BuildExtraText( recipe, Item );
+            extraText.text = BuildExtraText( recipe, catalog.TryGet( Item.Id, out var definition ) ? definition : null );
 
             foreach( var requirement in recipe.requirements ) {
                 chips.Add( Instantiate( chipPrefab, chipsRoot ) );
@@ -111,10 +112,10 @@ namespace Hearthglade.Gameplay.UI.Menu.Crafting
             craftButtonGlow.enabled = featured;
         }
 
-        static string BuildExtraText( Recipe recipe, ItemSO item ) {
+        static string BuildExtraText( Recipe recipe, ItemDefinition item ) {
             var text = new StringBuilder();
-            if( item.Damage > 0 ) {
-                Append( text, CraftingPalette.Cyan600, "Atak: " + item.Damage );
+            foreach( var line in ItemStatText.Lines( item ) ) {
+                Append( text, CraftingPalette.Cyan600, line );
             }
             if( !string.IsNullOrEmpty( recipe.tag ) ) {
                 Append( text, CraftingPalette.Amber600, recipe.tag );

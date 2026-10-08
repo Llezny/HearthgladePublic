@@ -1,7 +1,6 @@
 using Hearthglade.Core.Items;
 using System;
 using System.Collections.Generic;
-using Hearthglade.Gameplay.Player.Stats;
 using Hearthglade.Gameplay.UI.Menu.Inventory;
 using UnityEngine;
 
@@ -38,6 +37,20 @@ namespace Hearthglade.Gameplay.Items {
         public float MaxDurability = 0;
         public bool HasDurability;
         public int Damage;
-        public List<AttributeModifier> Modifiers;
+        [ Tooltip( "What the character shows when the item is worn: a head, torso or shoes part of the character kit." ) ]
+        public Hearthglade.Gameplay.Characters.CharacterPartSO WornPart;
+
+        [ Header( "Hand stats" ) ]
+        [ Tooltip( "The family of the item: picks its animation set. Many pickaxes share one group." ) ]
+        public ToolGroup ToolGroup;
+        [ Tooltip( "Gathering speed multiplier (bare hands = 1). 0 = no good for chopping trees." ), Min( 0 ) ] public float ChopSpeed;
+        [ Tooltip( "Gathering speed multiplier (bare hands = 1). 0 = no good for harvesting plants." ), Min( 0 ) ] public float HarvestSpeed;
+        [ Tooltip( "Gathering speed multiplier (bare hands = 1). 0 = no good for mining rock and ore." ), Min( 0 ) ] public float MineSpeed;
+        [ Min( 0 ) ] public float AttackPower;
+
+        [ Header( "Protection (worn)" ) ]
+        [ Min( 0 ) ] public float ColdProtection;
+        [ Min( 0 ) ] public float HeatProtection;
+        [ Tooltip( "Fraction of damage taken off (0.25 = a quarter); the total of the outfit is capped at 0.8." ), Min( 0 ) ] public float DamageProtection;
     }
 }

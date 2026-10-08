@@ -2,6 +2,7 @@ using Hearthglade.Gameplay.Common;
 using Hearthglade.Gameplay.Common.Service;
 using Hearthglade.Gameplay.Environment;
 using Hearthglade.Gameplay.Player.Controller;
+using Hearthglade.Gameplay.UI.HUD.Messages;
 using Hearthglade.Gameplay.UI.Menu.Common;
 using Lean.Touch;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace Hearthglade.Gameplay.Player {
         private PlayerController playerController;
         private InteractBehaviour interactBehaviour;
         private GameManager gameManager;
+        private MurmurService murmurService;
         private GameState gameState;
 
         private Camera mainCamera;
@@ -21,10 +23,11 @@ namespace Hearthglade.Gameplay.Player {
         private int clickableLayerMask;
 
         [Inject]
-        public void Construct( PlayerController playerController, InteractBehaviour interactBehaviour, GameManager gameManager ) {
+        public void Construct( PlayerController playerController, InteractBehaviour interactBehaviour, GameManager gameManager, MurmurService murmurService ) {
             this.playerController = playerController;
             this.interactBehaviour = interactBehaviour;
             this.gameManager = gameManager;
+            this.murmurService = murmurService;
         }
 
         private void Start( ) {
@@ -88,7 +91,13 @@ namespace Hearthglade.Gameplay.Player {
             }
 
             var interactable = hit.transform.GetComponent<IInteractable>( );
-            if ( interactable == null || !interactable.CanInteract( ) ) {
+            if ( interactable == null ) {
+                return;
+            }
+            if ( !interactable.CanInteract( ) ) {
+                if ( !string.IsNullOrEmpty( interactable.RefusalMessage ) ) {
+                    murmurService.Show( interactable.RefusalMessage );
+                }
                 return;
             }
 

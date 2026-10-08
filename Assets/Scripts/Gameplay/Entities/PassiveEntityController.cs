@@ -65,6 +65,11 @@ namespace Hearthglade.Gameplay.Entities {
             FleeFrom( attacker.transform.position );
         }
 
+        // Hit by something at `danger` (a spear thrust): run away from it.
+        public void GetAttacked( Vector3 danger ) {
+            FleeFrom( danger );
+        }
+
         private bool IsThreatened() {
             if( threat == null ) {
                 return false;

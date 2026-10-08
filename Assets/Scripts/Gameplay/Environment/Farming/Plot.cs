@@ -1,5 +1,6 @@
 using Hearthglade.Core.Farming;
 using Hearthglade.Gameplay.Player.Controller;
+using Hearthglade.Gameplay.Resource;
 using Hearthglade.Gameplay.UI.Menu.Farming;
 using UnityEngine;
 using VContainer;
@@ -41,7 +42,9 @@ namespace Hearthglade.Gameplay.Environment.Farming
         public string TooltipDescription => Describe( View, crop != null ? farming.ClimateFor( key, crop ).issue : ClimateIssue.None );
         public float InteractionDistance => crop != null && crop.harvest != null ? crop.harvest.MinInteractionDistance : 0.4f;
         public float InteractionDuration => farming.GatheringSeconds( crop );
-        public AnimationClip InteractionAnim => crop != null && crop.harvest != null ? crop.harvest.InteractionAnim : null;
+        public AnimationClip AnimationOverride => Gathered != null ? Gathered.AnimationOverride : null;
+        // Only a ripe crop is gathered; tending the patch (planting, looking) plays no work animation.
+        public ResourceSO Gathered => IsRipe && crop != null ? crop.harvest : null;
         public InteractionTiming InteractionTiming => IsRipe ? InteractionTiming.LoadingBar : InteractionTiming.Instant;
 
         [ Inject ]
@@ -182,7 +185,7 @@ namespace Hearthglade.Gameplay.Environment.Farming
                 seedPicker.Open( this );
                 return;
             }
-            farming.BeginGathering();
+            farming.BeginGathering( crop );
             playerController.transform.LookAt( transform );
             var angles = playerController.transform.rotation.eulerAngles;
             playerController.transform.rotation = Quaternion.Euler( 0, angles.y, angles.z );
@@ -193,8 +196,9 @@ namespace Hearthglade.Gameplay.Environment.Farming
         }
 
         public override void InteractionCompleted() {
-            farming.EndGathering();
-            if( isBound && farming.Harvest( key, crop ) ) {
+            bool harvested = isBound && farming.Harvest( key, crop );
+            farming.EndGathering( harvested );
+            if( harvested ) {
                 // A puff of dust over the bed where the produce came off.
                 PlaceDust.Spawn( transform.position + readyBadgeOffset * 0.1f, transform.rotation, new Vector2( 0.3f, 0.3f ) );
             }

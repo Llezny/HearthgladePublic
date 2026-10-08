@@ -47,6 +47,15 @@ namespace Hearthglade.Gameplay.UI.HUD.Messages {
             instance.messageText.text = text;
             return instance;
         }
+
+        // The bubble is kept by MurmurService and reused, so it is instantiated instead of pooled.
+        public MurmurBubble SpawnMurmurBubble() {
+            var instance = UnityEngine.Object.Instantiate( messagePrefabsDictionary[MessageType.Murmur], canvasService.InteractionIconCanvas.transform ).GetComponent<MurmurBubble>();
+            if( instance == null ) {
+                UnityEngine.Debug.LogError( $"Failed to spawn {nameof(MurmurBubble)}");
+            }
+            return instance;
+        }
     }
 
 }

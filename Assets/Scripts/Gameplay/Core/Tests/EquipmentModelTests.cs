@@ -115,5 +115,98 @@ namespace Hearthglade.Core.Tests {
             Assert.AreEqual( SlotType.Hand, type );
             Assert.IsFalse( model.TryGetSlotType( new ItemSlot(), out _ ) );
         }
+
+        private static ItemDefinition Boots( string id = "Boots", Protection protection = default ) {
+            return TestItems.Clothing( id, ItemType.Footwear, protection );
+        }
+
+        [ Test ]
+        public void TheFeetSlot_TakesFootwearOnly( ) {
+            var model = new EquipmentModel();
+            Assert.IsTrue( model[ SlotType.Feet ].Accepts( Boots() ) );
+            Assert.IsFalse( model[ SlotType.Feet ].Accepts( TestItems.Helmet() ) );
+            Assert.IsFalse( model[ SlotType.Feet ].Accepts( TestItems.Axe() ) );
+            Assert.IsFalse( model[ SlotType.Head ].Accepts( Boots() ) );
+            Assert.IsFalse( model[ SlotType.Hand ].Accepts( Boots() ) );
+        }
+
+        [ Test ]
+        public void FootwearFitsTheBackpack( ) {
+            var backpack = new ItemContainer( 2 );
+            Assert.IsTrue( backpack.Add( Boots() ).IsComplete );
+        }
+
+        [ Test ]
+        public void DraggingBootsOntoTheFeetSlot_Equips( ) {
+            var model = new EquipmentModel();
+            var backpack = new ItemContainer( 2 );
+            backpack.Add( Boots() );
+            var log = Record( model );
+
+            Assert.AreEqual( MoveResult.Moved, ItemTransfer.Move( backpack[ 0 ], model[ SlotType.Feet ] ) );
+
+            CollectionAssert.AreEqual( new[] { "equip Feet Boots" }, log );
+        }
+
+        [ Test ]
+        public void Protection_IsNothingWithoutClothes( ) {
+            Assert.IsTrue( new EquipmentModel().Protection.IsEmpty );
+        }
+
+        [ Test ]
+        public void Protection_SumsTheThreeWornPieces( ) {
+            var model = new EquipmentModel();
+            model[ SlotType.Head ].Set( ItemStack.Of( TestItems.Clothing( "Cap", ItemType.Helmet, new Protection( cold: 1f, damage: 0.1f ) ) ) );
+            model[ SlotType.Chest ].Set( ItemStack.Of( TestItems.Clothing( "Coat", ItemType.Chestplate, new Protection( cold: 2f, damage: 0.2f ) ) ) );
+            model[ SlotType.Feet ].Set( ItemStack.Of( Boots( protection: new Protection( cold: 0.5f, heat: 1f, damage: 0.1f ) ) ) );
+
+            var total = model.Protection;
+
+            Assert.AreEqual( 3.5f, total.Cold, 1e-4f );
+            Assert.AreEqual( 1f, total.Heat, 1e-4f );
+            Assert.AreEqual( 0.4f, total.Damage, 1e-4f );
+        }
+
+        [ Test ]
+        public void Protection_KeepsPiecesWithTheSameValuesApart( ) {
+            var model = new EquipmentModel();
+            var same = new Protection( cold: 0.1f );
+            model[ SlotType.Head ].Set( ItemStack.Of( TestItems.Clothing( "Cap", ItemType.Helmet, same ) ) );
+            model[ SlotType.Feet ].Set( ItemStack.Of( Boots( protection: same ) ) );
+            Assert.AreEqual( 0.2f, model.Protection.Cold, 1e-4f );
+
+            model[ SlotType.Feet ].Clear();
+
+            Assert.AreEqual( 0.1f, model.Protection.Cold, 1e-4f );
+        }
+
+        [ Test ]
+        public void Protection_FollowsSwappingAndUnequipping( ) {
+            var model = new EquipmentModel();
+            model[ SlotType.Head ].Set( ItemStack.Of( TestItems.Clothing( "Cap", ItemType.Helmet, new Protection( cold: 1f ) ) ) );
+            model[ SlotType.Head ].Set( ItemStack.Of( TestItems.Clothing( "Hood", ItemType.Helmet, new Protection( cold: 3f ) ) ) );
+            Assert.AreEqual( 3f, model.Protection.Cold, 1e-4f );
+
+            model[ SlotType.Head ].Clear();
+
+            Assert.IsTrue( model.Protection.IsEmpty );
+        }
+
+        [ Test ]
+        public void Protection_IgnoresWhatIsHeldInTheHand( ) {
+            var model = new EquipmentModel();
+            var shield = TestItems.Make( "Shield", maxStack: 1, type: ItemType.Weapon, protection: new Protection( damage: 0.5f ) );
+            model[ SlotType.Hand ].Set( ItemStack.Of( shield ) );
+            Assert.IsTrue( model.Protection.IsEmpty );
+        }
+
+        [ Test ]
+        public void Protection_DamageReductionOfAFullOutfitIsCapped( ) {
+            var model = new EquipmentModel();
+            model[ SlotType.Head ].Set( ItemStack.Of( TestItems.Clothing( "Helm", ItemType.Helmet, new Protection( damage: 0.5f ) ) ) );
+            model[ SlotType.Chest ].Set( ItemStack.Of( TestItems.Clothing( "Plate", ItemType.Chestplate, new Protection( damage: 0.6f ) ) ) );
+            Assert.AreEqual( 1.1f, model.Protection.Damage, 1e-4f );
+            Assert.AreEqual( Protection.MaxDamageReduction, model.Protection.DamageReduction, 1e-4f );
+        }
     }
 }

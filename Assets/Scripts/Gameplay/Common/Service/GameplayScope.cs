@@ -1,6 +1,8 @@
 using Hearthglade.Core.Farming;
 using Hearthglade.Core.Items;
+using Hearthglade.Gameplay.Animation;
 using Hearthglade.Gameplay.Audio;
+using Hearthglade.Gameplay.Characters;
 using Hearthglade.Gameplay.Common.Events;
 using Hearthglade.Gameplay.Common.Service.Factory;
 using Hearthglade.Gameplay.Database;
@@ -56,6 +58,8 @@ namespace Hearthglade.Gameplay.Common.Service {
             builder.RegisterComponentInHierarchy<PlayerController>( );
             builder.RegisterComponentInHierarchy<ItemEquipper>( );
             builder.RegisterComponentInHierarchy<PlayerStatsComponent>( );
+            builder.RegisterComponentInHierarchy<PlayerAnimationController>( );
+            builder.RegisterComponentInHierarchy<PlayerOutfit>( );
 
 #region Events
             builder.RegisterComponentInHierarchy<GameEvents>();
@@ -76,8 +80,12 @@ namespace Hearthglade.Gameplay.Common.Service {
             builder.RegisterEntryPoint<FarmingService>( Lifetime.Scoped ).AsSelf();
             builder.Register<InventoryService>(Lifetime.Scoped).AsSelf().As<IItemSlotActions>();
             builder.RegisterEntryPoint<ItemUseAudio>( Lifetime.Scoped );
+            builder.RegisterEntryPoint<MapMusicController>( Lifetime.Scoped );
             builder.Register<ItemFrameService>(Lifetime.Scoped);
+            builder.Register<PlayerToolService>( Lifetime.Scoped );
+            builder.Register<InteractionAnimationPicker>( Lifetime.Scoped );
             builder.RegisterEntryPoint<CookingService>( Lifetime.Scoped ).AsSelf();
+            builder.RegisterEntryPoint<ExposureService>( Lifetime.Scoped ).AsSelf();
             builder.RegisterEntryPoint<PortService>( Lifetime.Scoped ).AsSelf();
             builder.RegisterEntryPoint<ExpeditionService>( Lifetime.Scoped ).AsSelf();
             builder.RegisterEntryPoint<ShipTreeService>( Lifetime.Scoped ).AsSelf();
@@ -97,18 +105,19 @@ namespace Hearthglade.Gameplay.Common.Service {
 #endregion Services
 
 #region Factories
+            builder.Register<Hearthglade.Gameplay.Entities.HuntingService>( Lifetime.Scoped );
             builder.Register<MapFactory>( Lifetime.Singleton );
             builder.Register<GameObjectFactory>( Lifetime.Singleton );
             builder.Register<PlayerStatBarFactory>( Lifetime.Singleton );
             builder.Register<InventorySlotViewFactory>( Lifetime.Singleton ).As<IInventorySlotViewFactory>();
             builder.Register<MessageFactory>( Lifetime.Singleton ).As<IMessageFactory>();
-            
+            builder.Register<MurmurService>( Lifetime.Scoped );
+
 #endregion Factories
 
 #region UI
             builder.RegisterComponentInHierarchy<ClockManager>( ).AsSelf( ).As<IWorldClock>( );
             builder.RegisterInstance<ILoadingScreen>( LoadingScreen.Instance );
-            builder.RegisterInstance<AudioManager>( AudioManager.Instance );
             builder.RegisterComponentInHierarchy<MessagePopup>();
             builder.RegisterComponentInHierarchy<EquipmentView>( );
             builder.RegisterComponentInHierarchy<ChestView>();

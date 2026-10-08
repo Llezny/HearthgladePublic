@@ -501,6 +501,70 @@ def shoes_low(armature):
     return finish(part, "Shoes_Low", armature)
 
 
+# ---- the player's plain clothes and the Traveller set (docs/EQUIPMENT_PLAN.md, phase 5) ----
+
+COAT_LEATHER = Col((6, 1), "Top")
+COAT_TRIM = Col((0, 3), "TopTrim")
+CAP_WOOL = Col((2, 4), "Hat")
+CAP_BAND = Col((0, 3), "HatBand")
+BOOT_DARK = Col((0, 1), "Shoes")
+BOOT_CUFF = Col((0, 3), "Shoes")
+
+
+def head_plain(armature):
+    """The player's head without anything on it: hair only."""
+    part = Part()
+    add_head(part, hair_rule(SKIN_TAN, HAIR_BROWN, 0.72, 0.82, 0.95))
+    return finish(part, "Head_Plain", armature)
+
+
+def head_traveller(armature):
+    """A knitted cap pulled over the hair, with a turned-up band."""
+    part = Part()
+    add_head(part, hair_rule(SKIN_TAN, HAIR_BROWN, 0.72, 0.82, 0.95))
+    loft(part, "z", [(0.875, rect(0, 0, 0.184, 0.182, 0.056)), (0.935, rect(0, 0, 0.186, 0.184, 0.057))], weights_head, CAP_BAND)
+    loft(part, "z", [(0.93, rect(0, 0, 0.18, 0.178, 0.054)), (0.99, rect(0, 0, 0.176, 0.174, 0.052)), (1.05, rect(0, 0, 0.12, 0.118, 0.04))],
+         weights_head, CAP_WOOL)
+    return finish(part, "Head_Traveller", armature)
+
+
+def torso_plain(armature):
+    """The player's own clothes: a cream shirt and brown trousers."""
+    part = Part()
+    add_neck(part, SKIN_TAN)
+    loft(part, "z", [(0.30, rect(0, 0, 0.145, 0.105, 0.03)), (0.45, rect(0, 0, 0.15, 0.108, 0.03)), (0.56, rect(0, 0, 0.157, 0.11, 0.032)),
+                     (0.60, rect(0, 0, 0.12, 0.085, 0.035))], weights_torso, SHIRT_CREAM)
+    add_arms(part, SHIRT_CREAM, SKIN_TAN, sleeve_end=0.30)
+    add_legs(part, TROUSERS_BROWN)
+    return finish(part, "Torso_Plain", armature)
+
+
+def torso_traveller(armature):
+    """A long leather coat with a belt and a fur collar over brown trousers."""
+    part = Part()
+    add_neck(part, SKIN_TAN)
+    loft(part, "z", [(0.36, rect(0, 0, 0.158, 0.116, 0.032)), (0.50, rect(0, 0, 0.164, 0.118, 0.034)), (0.57, rect(0, 0, 0.166, 0.118, 0.034)),
+                     (0.60, rect(0, 0, 0.125, 0.09, 0.036))], weights_torso, COAT_LEATHER)
+    # The skirt of the coat hangs from the belt and does not follow the legs.
+    loft(part, "z", [(0.37, rect(0, 0, 0.16, 0.117, 0.032)), (0.27, rect(0, 0, 0.18, 0.136, 0.042)), (0.20, rect(0, 0, 0.19, 0.145, 0.046))],
+         weights_skirt, COAT_LEATHER, seg_colours={1: COAT_TRIM})
+    loft(part, "z", [(0.385, rect(0, 0, 0.168, 0.122, 0.034)), (0.425, rect(0, 0, 0.168, 0.122, 0.034))], weights_torso, STRAP)
+    loft(part, "z", [(0.565, rect(0, 0, 0.098, 0.09, 0.03)), (0.64, rect(0, 0, 0.088, 0.082, 0.028))], weights_torso, COAT_TRIM)
+    add_arms(part, COAT_LEATHER, SKIN_TAN, sleeve_end=0.355)
+    add_legs(part, TROUSERS_BROWN)
+    return finish(part, "Torso_Traveller", armature)
+
+
+def shoes_traveller(armature):
+    """Tall dark boots with a turned cuff."""
+    part = Part()
+    for sign in (1, -1):
+        add_boot(part, sign, 0.0, 0.15, BOOT_DARK, BOOT_DARK)
+        cx = 0.07 * sign
+        loft(part, "z", [(0.135, rect(cx, 0, 0.076, 0.075, 0.022)), (0.16, rect(cx, 0, 0.076, 0.075, 0.022))], weights_leg_point, BOOT_CUFF)
+    return finish(part, "Shoes_Traveller", armature)
+
+
 # ---- preview ----
 
 def pose_rotate(armature, bone, axis, degrees):
@@ -575,6 +639,55 @@ def render_outfits(armature, outfits):
             obj.hide_render = False
 
 
+ICON_DIR = "E:/Repos/Hearthglade/Assets/Arts/Sprites/ItemIcons/Equipment"
+# name -> (part, look-at point, ortho scale): an icon shows the piece on the body it belongs to, framed on the piece.
+ICONS = {
+    "TravellerCap": ("Head_Traveller", V((0, 0, 0.97)), 0.50),
+    "TravellerCoat": ("Torso_Traveller", V((0, 0, 0.60)), 0.95),
+    "TravellerBoots": ("Shoes_Traveller", V((0, 0, 0.11)), 0.42),
+}
+
+
+def render_icons(armature):
+    """512x512 transparent item icons of the Traveller pieces, the same Workbench look as the tool icons."""
+    os.makedirs(ICON_DIR, exist_ok=True)
+    scene = bpy.context.scene
+    render = scene.render
+    shading = scene.display.shading
+    cam_data = bpy.data.cameras.new("IconCam")
+    cam_data.type = "ORTHO"
+    cam = bpy.data.objects.new("IconCam", cam_data)
+    scene.collection.objects.link(cam)
+    scene.camera = cam
+    render.engine = "BLENDER_WORKBENCH"
+    shading.light = "STUDIO"
+    shading.color_type = "TEXTURE"
+    shading.show_object_outline = True
+    shading.object_outline_color = (0.10, 0.06, 0.04)
+    render.resolution_x = render.resolution_y = 512
+    render.film_transparent = True
+    render.image_settings.file_format = "PNG"
+    render.image_settings.color_mode = "RGBA"
+    reset_pose(armature)
+    idle_pose(armature)
+    for name, (part, target, scale) in ICONS.items():
+        for obj in bpy.data.objects:
+            if obj.type == "MESH":
+                obj.hide_render = obj.name != part
+        cam_data.ortho_scale = scale
+        cam.location = target + V((0.55, -0.8, 0.25)).normalized() * 3.0
+        cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
+        render.filepath = f"{ICON_DIR}/{name}.png"
+        bpy.ops.render.render(write_still=True)
+        print("rendered", render.filepath)
+    reset_pose(armature)
+    for obj in bpy.data.objects:
+        if obj.type == "MESH":
+            obj.hide_render = False
+    bpy.data.objects.remove(cam, do_unlink=True)
+    bpy.data.cameras.remove(cam_data)
+
+
 def export(armature, meshes):
     os.makedirs(os.path.dirname(EXPORT_PATH), exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")
@@ -595,13 +708,17 @@ def main():
     meshes = [
         head_orchardist(armature), torso_orchardist(armature), shoes_boots(armature),
         head_herbalist(armature), torso_herbalist(armature), shoes_low(armature),
+        head_plain(armature), torso_plain(armature), head_traveller(armature), torso_traveller(armature), shoes_traveller(armature),
     ]
     outfits = {
         "Orchardist": {"Head_Orchardist", "Torso_Orchardist", "Shoes_Boots"},
         "Herbalist": {"Head_Herbalist", "Torso_Herbalist", "Shoes_Low"},
+        "Plain": {"Head_Plain", "Torso_Plain", "Shoes_Low"},
+        "Traveller": {"Head_Traveller", "Torso_Traveller", "Shoes_Traveller"},
     }
     export(armature, meshes)
     render_outfits(armature, outfits)
+    render_icons(armature)
 
 
 if __name__ == "__main__":

@@ -57,10 +57,11 @@ namespace Hearthglade.Gameplay.Environment.Cooking {
             }
         }
 
-        private bool HasFuel() => FuelLeft > CookingService.MinFuel;
+        // The fire is lit while there is fuel left: it shows flames, cooks and warms whoever stands close.
+        public bool IsBurning => FuelLeft > CookingService.MinFuel;
 
         private bool CanProgress( float value ) {
-            return HasFuel() && !TargetItem.IsEmpty && CookingProgress < CookingService.MaxProgress;
+            return IsBurning && !TargetItem.IsEmpty && CookingProgress < CookingService.MaxProgress;
         }
 
         public void AddFuel( float value ) {
@@ -82,7 +83,7 @@ namespace Hearthglade.Gameplay.Environment.Cooking {
         }
 
         public void Update( float deltaTime ) {
-            var fuelFactor = -deltaTime / 10;
+            var fuelFactor = -deltaTime / CookingService.SecondsPerFuel;
             AddFuel( fuelFactor );
 
             if( TargetItem.IsEmpty ) {

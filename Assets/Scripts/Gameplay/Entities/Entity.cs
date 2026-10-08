@@ -66,12 +66,15 @@ namespace Hearthglade.Gameplay.Entities
             }
         }
 
+        // How much health a life starts with.
+        protected virtual float MaxHealth => 100f;
+
         // A pooled entity starts every life healthy.
         private void ResetHealth() {
             if( Health != null ) {
                 Health.OnCurrentValueEqualZero -= Die;
             }
-            Health = new PlayerNeed( 100, 100, 100 );
+            Health = new PlayerNeed( MaxHealth, MaxHealth, MaxHealth );
             if( isActiveAndEnabled ) {
                 Health.OnCurrentValueEqualZero += Die;
             }

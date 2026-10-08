@@ -4,7 +4,7 @@ namespace Hearthglade.Gameplay.Common.Bootstrap.Steps {
 
     /// <summary>
     /// Instantiates every Autorun BootstrapServiceSO's prefab as DontDestroyOnLoad — the persistent
-    /// services (LoadingScreen, AudioManager, SceneLoader...) that survive every scene
+    /// services (LoadingScreen, SceneLoader...) that survive every scene
     /// load. Runs before the loading screen exists, so unlike the other bootstrap steps it cannot
     /// report progress to it; Object.Instantiate is expected to be effectively instant.
     /// </summary>

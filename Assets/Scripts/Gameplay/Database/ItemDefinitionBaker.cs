@@ -28,7 +28,10 @@ namespace Hearthglade.Gameplay.Database
                 item.HasDurability,
                 item.MaxDurability,
                 item.Tags,
-                item.BaseValue );
+                item.BaseValue,
+                new ItemStats( item.ChopSpeed, item.HarvestSpeed, item.MineSpeed, item.AttackPower ),
+                new Protection( item.ColdProtection, item.HeatProtection, item.DamageProtection ),
+                item.ToolGroup );
         }
     }
 }

@@ -17,6 +17,8 @@ namespace Hearthglade.Gameplay.UI.Menu.Cooking {
         //Todo would be nice to make some service to tag items instead of matching by name, same as fuel below
         public const int MaxFuel = 10, MinFuel = 0;
         public const int MaxProgress = 10, MinProgress = 0;
+        // How long one point of fuel burns: a log of wood (FuelValue 1) keeps the fire going for a minute.
+        public const float SecondsPerFuel = 60f;
 
         public Action<CookingStation, CookingStationState> ActiveCookingStationChanged;
         public Action<CookingStation, CookingStationState> StationUpgraded;
@@ -38,6 +40,21 @@ namespace Hearthglade.Gameplay.UI.Menu.Cooking {
             this.catalog = catalog;
             this.saveManager = saveManager;
             this.references = references;
+        }
+
+        // A station with fuel left is burning (its fuel burns down whether it cooks or not), and a burning one warms whoever stands close.
+        public bool IsFireBurningNear( Vector3 position, float radius ) {
+            foreach( var kvp in registeredCookingStations ) {
+                if( kvp.Key != null && kvp.Value.IsBurning
+                    && ( kvp.Key.transform.position - position ).sqrMagnitude <= radius * radius ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public CookingStationState StateOf( CookingStation station ) {
+            return registeredCookingStations.TryGetValue( station, out var state ) ? state : null;
         }
 
         public void Tick() {

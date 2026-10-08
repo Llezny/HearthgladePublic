@@ -87,6 +87,13 @@ namespace Hearthglade.Gameplay.Map
             this.mapGenerator = mapGenerator;
         }
 
+        // The player's side of hunting, for the animals of this map (they come from a pool without injection).
+        public Entities.HuntingService Hunting { get; private set; }
+
+        public void SetHunting( Entities.HuntingService hunting ) {
+            Hunting = hunting;
+        }
+
         public void SetPlayerController( PlayerController playerController  ) {
             this.playerController = playerController;
         }

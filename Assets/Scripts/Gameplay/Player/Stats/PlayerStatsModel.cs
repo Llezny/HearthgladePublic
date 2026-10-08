@@ -13,16 +13,15 @@ namespace Hearthglade.Gameplay.Player.Stats
         private readonly Dictionary<StatsMap, Stat> statsDictionary = new Dictionary<StatsMap, Stat>();
         private readonly Rigidbody playerRigidbody;
         private readonly ClockManager clockManager;
+        // Other reasons than hunger and thirst for health to drain right now (the cold or the heat); may be null.
+        private readonly System.Func<bool> otherHarm;
 
 
         public List<Pair<StatsMap, PlayerNeed>> PlayerNeeds;
 
-        public List<Pair<StatsMap, PlayerAttribute>> staticStatsList = new List<Pair<StatsMap, PlayerAttribute>>() {
-            new( StatsMap.miningSpeed, new PlayerAttribute( 0, 1, 0 ) ),
-            new( StatsMap.cuttingTreesSpeed, new PlayerAttribute( 0, 1, 0 ) ),
-        };
 
-        public PlayerStatsModel( Rigidbody playerRigidbody, GameEvents gameEvents, ClockManager clockManager ) {
+        public PlayerStatsModel( Rigidbody playerRigidbody, GameEvents gameEvents, ClockManager clockManager, System.Func<bool> otherHarm = null ) {
+            this.otherHarm = otherHarm;
             this.playerRigidbody = playerRigidbody;
             this.clockManager = clockManager;
 
@@ -42,9 +41,6 @@ namespace Hearthglade.Gameplay.Player.Stats
             foreach( var stat in PlayerNeeds ) {
                 statsDictionary.Add( stat.Item1, stat.Item2 );
             }
-            foreach( var stat in staticStatsList ) {
-                statsDictionary.Add( stat.Item1, stat.Item2 );
-            }
 
         }
 
@@ -52,13 +48,12 @@ namespace Hearthglade.Gameplay.Player.Stats
             float increaseFactor = clockManager.GetTimeScale() * Time.deltaTime / 2f;
             var isHungry = statsDictionary[StatsMap.hunger].CurrentValue <= 0;
             var isThirsty = statsDictionary[StatsMap.thirst].CurrentValue <= 0;
+            var isHarmed = otherHarm != null && otherHarm();
 
-            // Starvation/dehydration is currently the only source of damage, so it's what
-            // Health.Update's isTakingDamage flag is derived from - but Health itself only cares
-            // that damage is being taken, not why, so a future damage source (combat, fall damage,
-            // etc.) can feed into the same flag without another rename.
+            // Health only cares that damage is being taken, not why: starvation, dehydration and the weather (ExposureService) all
+            // feed the same flag.
             foreach( var stat in PlayerNeeds ) {
-                stat.Item2.Update( increaseFactor, isThirsty || isHungry );
+                stat.Item2.Update( increaseFactor, isThirsty || isHungry || isHarmed );
             }
         }
 
@@ -70,25 +65,7 @@ namespace Hearthglade.Gameplay.Player.Stats
             return statsDictionary[ statName ];
         }
 
-        public void RemoveStatModifiers( List<AttributeModifier> modifiers ) {
-            foreach( var modifier in modifiers ){
-                if( statsDictionary[modifier.TargetStat] is PlayerAttribute attribute ) {
-                    attribute.RemoveModifier( modifier );
-                } else {
-                    UnityEngine.Debug.LogWarning( $"Cannot remove modifier targeting {modifier.TargetStat}: it is not a PlayerAttribute." );
-                }
-            }
-        }
 
-        public void AddStatModifiers( List<AttributeModifier> modifiers ) {
-            foreach( var modifier in modifiers ){
-                if( statsDictionary[modifier.TargetStat] is PlayerAttribute attribute ) {
-                    attribute.AddModifier( modifier );
-                } else {
-                    UnityEngine.Debug.LogWarning( $"Cannot add modifier targeting {modifier.TargetStat}: it is not a PlayerAttribute." );
-                }
-            }
-        }
 
         [System.Serializable]
         public class SaveData {

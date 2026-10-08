@@ -14,11 +14,11 @@ namespace Hearthglade.EditorTools
     // assets that exist are updated in place, so their guids stay.
     public static class CharacterAssetBuilder
     {
-        private const string ModelPath = "Assets/Arts/Models/Characters/Character.fbx";
-        private const string PartFolder = "Assets/ScriptableObjects/Characters/Parts";
-        private const string AppearanceFolder = "Assets/ScriptableObjects/Characters";
+        internal const string ModelPath = "Assets/Arts/Models/Characters/Character.fbx";
+        internal const string PartFolder = "Assets/ScriptableObjects/Characters/Parts";
+        internal const string AppearanceFolder = "Assets/ScriptableObjects/Characters";
         private const string PrefabFolder = "Assets/_Prefabs/Characters";
-        private const string MaterialPath = "Assets/3rd-Party/BrokenVector/LowPolyTreePack/Materials/Normal.mat";
+        internal const string MaterialPath = "Assets/3rd-Party/BrokenVector/LowPolyTreePack/Materials/Normal.mat";
         private const string MeshFolder = "Assets/ScriptableObjects/Characters/Meshes";
         private const int ClickableLayer = 8;
 
@@ -237,7 +237,7 @@ namespace Hearthglade.EditorTools
         }
 
         // A part painted in other colours than it was made with is a mesh copy made in memory; a prefab needs it as an asset.
-        private static void BakeRecolouredMeshes( CharacterView view, string prefabName )
+        internal static void BakeRecolouredMeshes( CharacterView view, string prefabName )
         {
             var serialized = new SerializedObject( view );
             foreach( var field in new[] { "headRenderer", "torsoRenderer", "shoesRenderer" } )

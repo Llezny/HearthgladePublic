@@ -1,8 +1,6 @@
-﻿using Hearthglade.Core.Items;
+using Hearthglade.Core.Items;
 using Hearthglade.Core.Stats;
 using Hearthglade.Gameplay.Events;
-using Hearthglade.Gameplay.Items;
-using Hearthglade.Gameplay.Items.UsableItems;
 using Hearthglade.Gameplay.Map;
 using Hearthglade.Gameplay.UI.HUD;
 using Hearthglade.Gameplay.UI.Menu.Inventory;
@@ -17,14 +15,12 @@ namespace Hearthglade.Gameplay.Player.Stats {
         public PlayerStatsModel playerStatsModel;
         [ SerializeField ] private SaveManager saveManager;
         private InventoryService inventoryService;
-        private EquipmentService equipmentService;
 
         [ Inject ]
-        public void Construct( SaveManager saveManager, InventoryService inventoryService, EquipmentService equipmentService, GameEvents gameEvents, ClockManager clockManager ) {
+        public void Construct( SaveManager saveManager, InventoryService inventoryService, GameEvents gameEvents, ClockManager clockManager, ExposureService exposure ) {
             this.saveManager = saveManager;
             this.inventoryService = inventoryService;
-            this.equipmentService = equipmentService;
-            this.playerStatsModel = new PlayerStatsModel(  this.GetComponent<Rigidbody>(), gameEvents, clockManager );
+            this.playerStatsModel = new PlayerStatsModel( this.GetComponent<Rigidbody>(), gameEvents, clockManager, () => exposure.State.IsHarmful );
             saveManager.RegisterISavable(this);
             if( saveManager.TryGetState<PlayerStatsComponent>( out var gameState) ) {
                 RestoreState(gameState);
@@ -36,23 +32,11 @@ namespace Hearthglade.Gameplay.Player.Stats {
         }
 
         private void OnEnable( ) {
-            equipmentService.OnEquipped += Equip;
-            equipmentService.OnUnequipped += Unequip;
             inventoryService.OnItemUsed += UseItem;
         }
 
         private void OnDisable( ) {
-            equipmentService.OnEquipped -= Equip;
-            equipmentService.OnUnequipped -= Unequip;
             inventoryService.OnItemUsed -= UseItem;
-        }
-
-        private void Equip( ItemSO item, SlotType slotType ) {
-            playerStatsModel.AddStatModifiers( item.Modifiers );
-        }
-
-        private void Unequip( ItemSO item, SlotType slotType ) {
-            playerStatsModel.RemoveStatModifiers( item.Modifiers );
         }
 
         private void UseItem( ItemDefinition item, NutritionOverride nutrition ) {

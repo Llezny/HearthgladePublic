@@ -1,3 +1,5 @@
+using Hearthglade.Core.Stats;
+using Hearthglade.Gameplay.Audio;
 using UnityEngine;
 
 namespace Hearthglade.Gameplay.Map
@@ -18,12 +20,23 @@ namespace Hearthglade.Gameplay.Map
         [Tooltip( "Map NxN size in chunks, less than zero means endless map " )]
         public int SizeInChunks;
 
+        [ Header( "Temperature (°C):" ) ]
+        [ Tooltip( "The coldest cell of the map by day (climate -1). The night takes a few degrees more off. Only what the player feels: the biomes are generated from the climate scale." ) ]
+        public float minTemperature = Exposure.DefaultMinTemperature;
+
+        [ Tooltip( "The hottest cell of the map by day (climate 1)." ) ]
+        public float maxTemperature = Exposure.DefaultMaxTemperature;
+
         [ Header( "Perlin noise config:" ) ]
         public PerlinNoiseMapConfig perlinNoiseConfig;
 
         [ Header( "Ambient colors:" ) ]
         public GradientColor dayLight;
         public GradientColor nightLight;
+
+        [ Header( "Music:" ) ]
+        [ Tooltip( "Plays while the player is on this map. Empty: whatever played before keeps playing." ) ]
+        public MusicPlaylistSO Music;
 
         [ Header( "Objects on map:" ) ]
         public GameObject earthBlock;

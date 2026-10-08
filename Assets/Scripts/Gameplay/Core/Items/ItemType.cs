@@ -13,6 +13,7 @@ namespace Hearthglade.Core.Items {
         Weapon = 32,
         Chestplate = 64,
         Helmet = 128,
-        Everything = 255
+        Footwear = 256,
+        Everything = 511
     }
 }

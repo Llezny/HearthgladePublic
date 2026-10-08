@@ -6,8 +6,8 @@ using Hearthglade.Gameplay.Common.Service.Factory;
 using Hearthglade.Gameplay.Environment;
 using Hearthglade.Gameplay.Expeditions;
 using Hearthglade.Gameplay.Items;
+using Hearthglade.Gameplay.Player;
 using Hearthglade.Gameplay.Player.Controller;
-using Hearthglade.Gameplay.Player.Stats;
 using Hearthglade.Gameplay.UI.HUD;
 using Hearthglade.Gameplay.UI.Menu.Inventory;
 using UnityEngine;
@@ -22,34 +22,37 @@ namespace Hearthglade.Gameplay.Resource
         // Prop variant of a prefab (a Prefab Variant with this ticked): it looks and blocks like the original but cannot be gathered.
         [ SerializeField ] private bool isProp;
         public bool IsProp => isProp;
+        [ SerializeField ] private string propRefusalMessage = "The locals wouldn't like me chopping down their trees.";
+        public string RefusalMessage => isProp ? propRefusalMessage : tools?.MissingToolMessage( resourceSO );
 
         [field: SerializeField] public bool IsCurrentlyGathered { get; protected set; }
         public string TooltipTitle => resourceSO.name;
         public string TooltipDescription => resourceSO.ToolTipMessage;
         public float InteractionDistance => resourceSO.MinInteractionDistance;
-        public AnimationClip InteractionAnim => resourceSO.InteractionAnim;
+        public AnimationClip AnimationOverride => resourceSO.AnimationOverride;
+        public ResourceSO Gathered => isProp ? null : resourceSO;
         public InteractionTiming InteractionTiming => InteractionTiming.LoadingBar;
-        public float InteractionDuration => GatheringTime.Seconds( resourceSO, playerStatsComponent );
+        public float InteractionDuration => tools.GatherSeconds( resourceSO );
 
         protected PlayerController playerController;
-        protected PlayerStatsComponent playerStatsComponent;
+        protected PlayerToolService tools;
         protected InventoryService inventoryService;
         protected ShipTreeService shipTree;
         protected TickService tickService;
         protected GameObjectFactory gameObjectFactory;
         protected ClockManager clockManager;
-        protected AudioManager audioManager;
+        protected ISfxPlayer sfx;
         protected Action interactionCompleted;
 
         [ Inject ]
-        public void Construct( PlayerController playerController, InventoryService inventoryService, PlayerStatsComponent playerStatsComponent, TickService tickService, GameObjectFactory gameObjectFactory, ClockManager clockManager, AudioManager audioManager, ShipTreeService shipTree ) {
+        public void Construct( PlayerController playerController, InventoryService inventoryService, PlayerToolService tools, TickService tickService, GameObjectFactory gameObjectFactory, ClockManager clockManager, ISfxPlayer sfx, ShipTreeService shipTree ) {
             this.playerController = playerController;
             this.inventoryService = inventoryService;
-            this.playerStatsComponent = playerStatsComponent;
+            this.tools = tools;
             this.tickService = tickService;
             this.gameObjectFactory = gameObjectFactory;
             this.clockManager = clockManager;
-            this.audioManager = audioManager;
+            this.sfx = sfx;
             this.shipTree = shipTree;
             tickService.RegisterListener(Tick);
         }
@@ -69,9 +72,11 @@ namespace Hearthglade.Gameplay.Resource
 
         public void InteractCancelCallback( ) {
             IsCurrentlyGathered = false;
+            tools.Cancel();
         }
 
         public override void InteractionStart(){
+            tools.Begin( resourceSO );
             clockManager.SetTimeScale( 2 );
             IsCurrentlyGathered = true;
             SetPlayerPosition( playerController.transform );
@@ -81,10 +86,11 @@ namespace Hearthglade.Gameplay.Resource
             if( isProp ) {
                 return false;
             }
-            bool requiredItemCondition() => resourceSO.RequiredItem == null || inventoryService.HasItem( resourceSO.RequiredItem );
+            // A resource that needs a tool is refused until the player carries one (the reason is RefusalMessage).
+            bool hasTool() => tools.CanGather( resourceSO );
             // Gathering is refused while the yield would not fit, so nothing is lost.
             bool hasRoom() => resourceSO.ItemSoOnGather == null || inventoryService.CanFit( resourceSO.ItemSoOnGather, resourceSO.NumOfItemsOnGather );
-            return requiredItemCondition() && hasRoom();
+            return hasTool() && hasRoom();
         }
 
         public void AddInteractionCompletedCallback( Action callback ) {
@@ -109,9 +115,8 @@ namespace Hearthglade.Gameplay.Resource
             if( resourceSO.BonusItem != null && UnityEngine.Random.value < resourceSO.BonusChance ) {
                 inventoryService.AddItem( resourceSO.BonusItem, 1 );
             }
-            //   TODO
-            //   Inventory.instance.DecreaseHandItemDurability();
-            audioManager.Play( resourceSO.OnPickup );
+            tools.Complete();
+            sfx.Play( resourceSO.OnPickup );
             clockManager.ResetTimeScale();
             IsCurrentlyGathered = false;
             interactionCompleted?.Invoke();

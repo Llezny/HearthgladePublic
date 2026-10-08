@@ -2,6 +2,7 @@ using System;
 using Hearthglade.Core.Items;
 using Hearthglade.Gameplay.Common.Service.Factory;
 using UnityEngine;
+using TMPro;
 using VContainer;
 
 namespace Hearthglade.Gameplay.UI.Menu.Inventory {
@@ -11,6 +12,8 @@ namespace Hearthglade.Gameplay.UI.Menu.Inventory {
         [ SerializeField ] GameObject head;
         [ SerializeField ] GameObject chest;
         [ SerializeField ] GameObject hand;
+        [ SerializeField ] GameObject feet;
+        [ SerializeField ] TMP_Text protectionText;
 
         [ SerializeField ] Transform container;
         [ SerializeField ] GameObject playerCamera;
@@ -30,12 +33,25 @@ namespace Hearthglade.Gameplay.UI.Menu.Inventory {
             this.equipment = equipment;
             this.slotFactory = slotFactory;
             SetupView( equipment.Model );
+            equipment.Model.Equipped += ( _, _ ) => RefreshProtection();
+            equipment.Model.Unequipped += ( _, _ ) => RefreshProtection();
+            RefreshProtection();
         }
 
         private void SetupView( EquipmentModel slots ) {
             slotFactory.Get( head, container, slots[ SlotType.Head ] );
             slotFactory.Get( chest, container, slots[SlotType.Chest] );
             slotFactory.Get( hand, container, slots[SlotType.Hand] );
+            if( feet != null ) {
+                slotFactory.Get( feet, container, slots[ SlotType.Feet ] );
+            }
+        }
+
+        // What the worn clothes shield from, under the figure.
+        private void RefreshProtection() {
+            if( protectionText != null ) {
+                protectionText.text = ItemStatText.Summary( equipment.Model.Protection );
+            }
         }
 
         public void Show() {

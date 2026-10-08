@@ -107,8 +107,9 @@ namespace Hearthglade.Gameplay.Player {
             StartInteraction( interactable );
         }
         private void StartInteraction( IInteractable interactable ) {
-            InteractionStarted.Invoke( interactable );
+            // The interactable goes first: it is what picks the tool, which the animation and the hand then show.
             interactable.InteractionStart();
+            InteractionStarted.Invoke( interactable );
         }
 
         private void CompleteInteraction( IInteractable interactable ) {

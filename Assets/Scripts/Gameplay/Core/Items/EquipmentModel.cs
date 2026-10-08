@@ -16,12 +16,26 @@ namespace Hearthglade.Core.Items
         public EquipmentModel() {
             Add( SlotType.Chest, new ItemSlot( ItemType.Chestplate ) );
             Add( SlotType.Head, new ItemSlot( ItemType.Helmet ) );
+            Add( SlotType.Feet, new ItemSlot( ItemType.Footwear ) );
             Add( SlotType.Hand, new ItemSlot( ItemType.Tool | ItemType.Weapon ) );
         }
 
         public IEnumerable<KeyValuePair<SlotType, ItemSlot>> Slots => slots;
 
         public ItemSlot this[ SlotType type ] => slots[ type ];
+
+        // What the worn clothing shields from, summed over the head, chest and feet. The hand holds tools, which protect from nothing.
+        public Protection Protection {
+            get {
+                var total = default( Protection );
+                foreach( var pair in equipped ) {
+                    if( pair.Key != SlotType.Hand ) {
+                        total += pair.Value.Protection;
+                    }
+                }
+                return total;
+            }
+        }
 
         public bool TryGetSlotType( ItemSlot slot, out SlotType type ) {
             foreach( var pair in slots ) {

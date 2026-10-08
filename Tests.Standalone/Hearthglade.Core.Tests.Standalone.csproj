@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="../Assets/Scripts/Gameplay/Core/Audio/*.cs" />
     <Compile Include="../Assets/Scripts/Gameplay/Core/Stats/*.cs" />
     <Compile Include="../Assets/Scripts/Gameplay/Core/Entities/*.cs" />
     <Compile Include="../Assets/Scripts/Gameplay/Core/Items/*.cs" />

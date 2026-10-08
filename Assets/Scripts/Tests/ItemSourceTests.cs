@@ -37,6 +37,7 @@ namespace Hearthglade.Tests
         {
             { "FlatFish", "fish holes (entities of Home, FishingPopup)" },
             { "Water", "built Well" },
+            { "RawPoultry", "hunted hens (AnimalHunt on Hen.prefab, HuntingService)" },
         };
 
         private static readonly Regex CraftedName = new("\"craftedItemName\"\\s*:\\s*\"(\\w+)\"", RegexOptions.Compiled);

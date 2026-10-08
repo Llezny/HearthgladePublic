@@ -18,6 +18,11 @@ namespace Hearthglade.Core.Items
         public float MaxDurability { get; }
         public ItemTag Tags { get; }
 
+        // What the item does in the hand (tools, weapons) and what it shields the wearer from (clothing); empty for the rest.
+        public ItemStats Stats { get; }
+        public Protection Protection { get; }
+        public ToolGroup ToolGroup { get; }
+
         // What barter prices the item from; 0 = cannot be traded.
         public int BaseValue { get; }
 
@@ -34,7 +39,10 @@ namespace Hearthglade.Core.Items
             bool hasDurability = false,
             float maxDurability = 0f,
             ItemTag tags = ItemTag.None,
-            int baseValue = 0 ) {
+            int baseValue = 0,
+            ItemStats stats = default,
+            Protection protection = default,
+            ToolGroup toolGroup = ToolGroup.None ) {
             if( id.IsEmpty ) {
                 throw new ArgumentException( "An item needs an id", nameof( id ) );
             }
@@ -51,6 +59,9 @@ namespace Hearthglade.Core.Items
             MaxDurability = maxDurability;
             Tags = tags;
             BaseValue = Math.Max( 0, baseValue );
+            Stats = stats;
+            Protection = protection;
+            ToolGroup = toolGroup;
         }
 
         public bool IsTradable => BaseValue > 0;

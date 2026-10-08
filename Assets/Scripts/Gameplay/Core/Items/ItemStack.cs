@@ -45,6 +45,10 @@ namespace Hearthglade.Core.Items
             return count <= 0 || Definition == null ? default : new ItemStack( Definition, count, Durability, HasNutritionOverride, Nutrition );
         }
 
+        public ItemStack WithDurability( float durability ) {
+            return IsEmpty ? this : new ItemStack( Definition, Count, durability, HasNutritionOverride, Nutrition );
+        }
+
         public ItemStack WithNutrition( NutritionOverride nutrition ) {
             return IsEmpty ? this : new ItemStack( Definition, Count, Durability, true, nutrition );
         }

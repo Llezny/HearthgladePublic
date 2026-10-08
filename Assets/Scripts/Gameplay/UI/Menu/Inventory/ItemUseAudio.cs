@@ -11,12 +11,12 @@ namespace Hearthglade.Gameplay.UI.Menu.Inventory
     public sealed class ItemUseAudio : IInitializable, IDisposable {
         private readonly InventoryService inventoryService;
         private readonly ItemCatalog catalog;
-        private readonly AudioManager audioManager;
+        private readonly ISfxPlayer sfx;
 
-        public ItemUseAudio( InventoryService inventoryService, ItemCatalog catalog, AudioManager audioManager ) {
+        public ItemUseAudio( InventoryService inventoryService, ItemCatalog catalog, ISfxPlayer sfx ) {
             this.inventoryService = inventoryService;
             this.catalog = catalog;
-            this.audioManager = audioManager;
+            this.sfx = sfx;
         }
 
         public void Initialize() {
@@ -29,7 +29,7 @@ namespace Hearthglade.Gameplay.UI.Menu.Inventory
 
         private void PlaySound( ItemDefinition item, NutritionOverride nutrition ) {
             if( catalog.GetAsset( item ) is IUsableItem usable ) {
-                audioManager.Play( usable.UseSound );
+                sfx.Play( usable.UseSound );
             }
         }
     }

@@ -20,6 +20,16 @@ namespace Hearthglade.Gameplay.Environment.Cooking {
         // The chunk goes inactive before its objects are handed back, by which time the service has forgotten us.
         private object capturedState;
 
+        // The flames and the glow show only while the fire has fuel, so the player can tell a fire that cooks and warms from a cold one.
+        private ParticleSystem[] flames;
+        private Light[] glow;
+        private bool? shownBurning;
+
+        private void Awake() {
+            flames = GetComponentsInChildren<ParticleSystem>( true );
+            glow = GetComponentsInChildren<Light>( true );
+        }
+
         [ Inject ]
         public void Construct( CookingService cookingService ) {
             this.cookingService = cookingService;
@@ -31,8 +41,33 @@ namespace Hearthglade.Gameplay.Environment.Cooking {
             UpdatePotVisual( initialLevel );
         }
 
+        private void Update() {
+            var state = cookingService?.StateOf( this );
+            ShowFire( state != null && state.IsBurning );
+        }
+
+        private void ShowFire( bool burning ) {
+            if( shownBurning == burning ) {
+                return;
+            }
+            shownBurning = burning;
+            foreach( var flame in flames ) {
+                if( burning ) {
+                    flame.Play( true );
+                }
+                else {
+                    flame.Stop( true, ParticleSystemStopBehavior.StopEmitting );
+                }
+            }
+            foreach( var light in glow ) {
+                light.enabled = burning;
+            }
+        }
+
         // Chunk objects are pooled: a despawn only disables, and the next spawn injects again.
-        private void OnDisable() {
+        protected override void OnDisable() {
+            base.OnDisable();
+            shownBurning = null;
             if( cookingService != null ) {
                 capturedState = cookingService.CaptureCookingStationState( this );
                 cookingService.StationUpgraded -= OnStationUpgraded;

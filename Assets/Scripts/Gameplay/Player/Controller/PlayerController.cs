@@ -24,6 +24,8 @@ namespace Hearthglade.Gameplay.Player.Controller
         private bool isMouseLocked = false;
         public bool IsWalking { get; private set; }
         public bool IsAutoMoving { get; private set; }
+        // Inside a room closed on every side (the same check as the "you're in home" label); a roof keeps off some of the cold and the heat.
+        public bool IsIndoors { get; private set; }
         private bool joystickMustReturnToZero;
         private Vector2 lastJoystickInput;
 
@@ -154,7 +156,8 @@ namespace Hearthglade.Gameplay.Player.Controller
                     ? lastKnownRoomCells
                     : new List<(int x, int z)>( roomFloodFill.Cells );
             }
-            roomEnclosureIndicator.SetEnclosed( roomCells != null );
+            IsIndoors = roomCells != null;
+            roomEnclosureIndicator.SetEnclosed( IsIndoors );
 
             if ( roomCells != null ) {
                 if ( !ReferenceEquals( roomCells, lastKnownRoomCells ) ) {
@@ -472,7 +475,7 @@ namespace Hearthglade.Gameplay.Player.Controller
         }
         
         private void OnAttackAnimEnd( Entity target ) {
-            AudioManager.Instance.Play( attackAudio );
+            sfx.Play( attackAudio );
             //  animationController.PlayAnimation( "Idle" );
             target.GetAttacked( this );
         }

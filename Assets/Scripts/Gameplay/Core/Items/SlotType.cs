@@ -5,5 +5,6 @@ namespace Hearthglade.Core.Items
         Chest = 1,
         Head = 2,
         Other = 3,
+        Feet = 4,
     }
 }
