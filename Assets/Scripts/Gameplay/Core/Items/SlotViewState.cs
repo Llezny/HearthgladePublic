@@ -32,13 +32,21 @@ namespace Hearthglade.Core.Items
     {
         None = 0,
         Use = 1,
+        /// <summary>Furniture and other buildable items: the player puts them down in the world.</summary>
+        Place = 2,
     }
 
     public static class SlotActions
     {
         public static SlotAction Available( ItemSlot slot ) {
             var stack = slot.Stack;
-            return !stack.IsEmpty && stack.Definition.IsUsable ? SlotAction.Use : SlotAction.None;
+            if( stack.IsEmpty ) {
+                return SlotAction.None;
+            }
+            if( stack.Definition.IsUsable ) {
+                return SlotAction.Use;
+            }
+            return stack.Definition.Type == ItemType.Buildable ? SlotAction.Place : SlotAction.None;
         }
     }
 }

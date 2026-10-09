@@ -5,6 +5,7 @@ using Hearthglade.Gameplay.Common.Service;
 using Hearthglade.Gameplay.Common.Service.Factory;
 using Hearthglade.Gameplay.Database;
 using Hearthglade.Gameplay.Environment;
+using Hearthglade.Gameplay.Housing;
 using Hearthglade.Gameplay.Items.BuildableItems;
 using Hearthglade.Gameplay.Map;
 using Hearthglade.Gameplay.UI.Menu.Crafting;
@@ -21,6 +22,8 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
         // How many degrees one tap of a rotate button turns the ghost (docs/BUILDING_SYSTEM_PLAN.md section 5:
         // 8 discrete directions instead of the old continuous free rotation).
         private const float ROTATION_STEP_DEGREES = 45f;
+        // Furniture in the house sits on whole cells, so it turns a quarter turn at a time.
+        private const float INDOOR_ROTATION_STEP_DEGREES = 90f;
         private const float ROTATION_TWEEN_SECONDS = 0.15f;
 
         [ SerializeField ] Transform currentlyAttachedItem = null;
@@ -31,6 +34,8 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
 
         private BuildableItemSO currentItem = null;
         private int rotationStep = 0;
+        // Set when the item is picked: inside the house the piece goes into the layout of the room, not onto the map.
+        private bool placingIndoors = false;
         private Coroutine rotationTween = null;
         private SerializableVector2Int pendingCell;
         private int pendingY;
@@ -46,7 +51,10 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
 
         // A footprint bigger than one cell is anchored at its lowest corner cell, so turning the piece around that
         // cell would carry it off the cells that were checked: only single-cell pieces rotate.
-        private bool CanRotate => currentItem != null && !IsEdgePiece && currentItem.sizeInCells.x == 1 && currentItem.sizeInCells.z == 1;
+        // Indoors a piece of any size turns about its own middle.
+        private bool CanRotate => currentItem != null && !IsEdgePiece && ( placingIndoors || currentItem.sizeInCells.x == 1 && currentItem.sizeInCells.z == 1 );
+        private float RotationStepDegrees => placingIndoors ? INDOOR_ROTATION_STEP_DEGREES : ROTATION_STEP_DEGREES;
+        private int RotationSteps => Mathf.RoundToInt( 360f / RotationStepDegrees );
 
         // A floor tile is cell-anchored like furniture (keeps its manual rotation), but never stacks and
         // never looks at BuildOccupancyGrid at all - it only tracks "is there already a tile here"
@@ -65,11 +73,13 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
         private GameObjectFactory gameObjectFactory;
         private Inventory.InventoryService inventoryService;
         private MapManager mapManager = null;
+        private HouseService houseService = null;
         private ItemCatalog catalog;
         //
 
         [ Inject ]
-        public void Construct( GameObjectFactory gameObjectFactory, Inventory.InventoryService inventoryService, MapManager mapManager, CameraService cameraService, ItemCatalog catalog, GameManager gameManager ) {
+        public void Construct( GameObjectFactory gameObjectFactory, Inventory.InventoryService inventoryService, MapManager mapManager, CameraService cameraService, ItemCatalog catalog, GameManager gameManager, HouseService houseService ) {
+            this.houseService = houseService;
             this.catalog = catalog;
             this.gameObjectFactory = gameObjectFactory;
             this.inventoryService = inventoryService;
@@ -87,7 +97,15 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
         public void SetupBuildingMode( Recipe recipe ) {
 
             //TODO add check if item is not buildable or smth dont crash
-            var targetItem =  catalog.GetAsset( recipe.CraftedItem ) as BuildableItemSO;
+            SetupBuildingMode( catalog.GetAsset( recipe.CraftedItem ) as BuildableItemSO, recipe );
+        }
+
+        /// <summary>Puts down an item the player already has (furniture picked up from the house): it is taken from the backpack when it is put down.</summary>
+        public void SetupBuildingMode( BuildableItemSO item ) {
+            SetupBuildingMode( item, null );
+        }
+
+        private void SetupBuildingMode( BuildableItemSO targetItem, Recipe recipe ) {
             if ( targetItem is null || targetItem.buildingPrefab is null ) {
                 UnityEngine.Debug.LogError( "Target item does not contain building prefab!" );
                 return;
@@ -103,6 +121,13 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
 
             currentRecipe = recipe;
             currentItem = targetItem;
+            placingIndoors = houseService.IsInside;
+            if( placingIndoors != ( targetItem.place == BuildPlace.Indoors ) ) {
+                UnityEngine.Debug.LogError( $"{targetItem.name} cannot be built {( placingIndoors ? "inside the house" : "outdoors" )}" );
+                currentRecipe = null;
+                currentItem = null;
+                return;
+            }
 
             if( rotationTween != null ) {
                 StopCoroutine( rotationTween );
@@ -163,6 +188,9 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
             if( IsEdgePiece ) {
                 return CheckIfCanBuildOnEdge();
             }
+            if( placingIndoors ) {
+                return CheckIfCanBuildInHouse();
+            }
             return IsFloorPiece ? CheckIfCanBuildOnFloorCell() : CheckIfCanBuildOnCell();
         }
 
@@ -194,6 +222,24 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
             gridVisualizer.UpdateGrid( new Vector2Int( pendingCell.x, pendingCell.y ), pendingY,
                 new Vector2Int( pendingCell.x, pendingCell.y ), new Vector2Int( size.x, size.z ), fits );
 
+            return fits;
+        }
+
+        // Furniture in the house (docs/HOME_ISLAND_PLAN.md, phase 5): the footprint is centred under the finger and checked against the layout
+        // of the room, which knows the walls, the furniture of the house and the other pieces.
+        private bool CheckIfCanBuildInHouse() {
+            var cursor = MapHelper.WorldPositionToBlockIndex( hit.point );
+            var size = currentItem.sizeInCells;
+            bool turned = rotationStep % 2 != 0;
+            int width = turned ? size.z : size.x;
+            int depth = turned ? size.x : size.z;
+            pendingCell = new SerializableVector2Int( cursor.x - ( width - 1 ) / 2, cursor.y - ( depth - 1 ) / 2 );
+
+            var interior = houseService.Interior;
+            currentlyAttachedItem.position = interior.FloorCentre( pendingCell.x, pendingCell.y, width, depth );
+            var fits = houseService.CanPlace( currentItem, pendingCell.x, pendingCell.y, rotationStep );
+            gridVisualizer.UpdateGridAtHeight( new Vector2Int( cursor.x, cursor.y ), interior.FloorY,
+                new Vector2Int( pendingCell.x, pendingCell.y ), new Vector2Int( width, depth ), fits );
             return fits;
         }
 
@@ -267,11 +313,11 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
             if( currentlyAttachedItem == null || !CanRotate ) {
                 return;
             }
-            rotationStep = ( ( rotationStep + direction ) % 8 + 8 ) % 8;
+            rotationStep = ( ( rotationStep + direction ) % RotationSteps + RotationSteps ) % RotationSteps;
             if( rotationTween != null ) {
                 StopCoroutine( rotationTween );
             }
-            rotationTween = StartCoroutine( TweenRotationTo( rotationStep * ROTATION_STEP_DEGREES ) );
+            rotationTween = StartCoroutine( TweenRotationTo( rotationStep * RotationStepDegrees ) );
         }
 
         private IEnumerator TweenRotationTo( float targetYDegrees ) {
@@ -289,6 +335,10 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
         }
 
         private void PlaceBuilding() {
+            if( placingIndoors ) {
+                PlaceFurniture();
+                return;
+            }
             if( !inventoryService.RemoveItems( currentRecipe.requirements ) ) {
                 return;
             }
@@ -331,6 +381,33 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
             CloseBuildingPlacer();
         }
 
+        // The ghost is only a preview: the piece itself is made by the house from the saved data, the same way it is after a reload.
+        private void PlaceFurniture() {
+            if( !houseService.CanPlace( currentItem, pendingCell.x, pendingCell.y, rotationStep ) ) {
+                return;
+            }
+            // Built from the menu: the materials are the price. Put down from the backpack: the item itself is.
+            bool paid;
+            if( currentRecipe != null ) {
+                paid = inventoryService.RemoveItems( currentRecipe.requirements );
+            } else {
+                paid = inventoryService.Count( currentItem.Id ) > 0;
+                if( paid ) {
+                    inventoryService.RemoveItem( currentItem.Id );
+                }
+            }
+            if( !paid ) {
+                return;
+            }
+            if( !houseService.TryPlace( currentItem, pendingCell.x, pendingCell.y, rotationStep ) ) {
+                return;
+            }
+            SpawnPlaceDust();
+            cameraService.CameraShakeOnBuild();
+            Lean.Pool.LeanPool.Despawn( currentlyAttachedItem.gameObject );
+            CloseBuildingPlacer();
+        }
+
         private void ClearGrassUnderPiece( int pieceId ) {
             var map = mapManager.CurrentMap;
             if( IsEdgePiece ) {
@@ -369,6 +446,7 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
             currentlyAttachedItem = null;
             currentRecipe = null;
             currentItem = null;
+            placingIndoors = false;
         }
     }
 }

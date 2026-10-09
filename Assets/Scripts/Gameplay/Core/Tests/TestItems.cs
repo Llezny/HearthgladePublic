@@ -24,6 +24,7 @@ namespace Hearthglade.Core.Tests {
         public static ItemDefinition Stone() => Make( "Stone", maxStack: 5 );
         public static ItemDefinition Carrot() => Make( "Carrot", maxStack: 10, type: ItemType.Food, food: FoodType.Vegetable, nutrition: new NutritionOverride( 10, 0, 0 ) );
         public static ItemDefinition Axe() => Make( "Axe", maxStack: 1, type: ItemType.Tool, maxDurability: 100f );
+        public static ItemDefinition Stool() => Make( "Stool", maxStack: 10, type: ItemType.Buildable );
         public static ItemDefinition Helmet() => Make( "Helmet", maxStack: 1, type: ItemType.Helmet );
     }
 }

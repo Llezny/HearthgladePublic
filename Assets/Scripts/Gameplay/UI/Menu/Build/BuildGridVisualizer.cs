@@ -70,8 +70,13 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
         // centerCell/y place the line grid (rebuilt only when the ghost moves to a new cell or support
         // layer); boxOriginCell/boxSizeCells/fits position and colour the footprint highlight every call.
         public void UpdateGrid( Vector2Int centerCell, int y, Vector2Int boxOriginCell, Vector2Int boxSizeCells, bool fits ) {
+            UpdateGridAtHeight( centerCell, y * MapGenerator.TILE_X_OFFSET, boxOriginCell, boxSizeCells, fits );
+        }
+
+        // The same at a height in metres: the floor of a house is not on a whole cell layer.
+        public void UpdateGridAtHeight( Vector2Int centerCell, float worldHeight, Vector2Int boxOriginCell, Vector2Int boxSizeCells, bool fits ) {
             float cellSize = MapGenerator.TILE_X_OFFSET;
-            float worldY = RebuildLines( centerCell, y );
+            float worldY = RebuildLinesAt( centerCell, worldHeight );
 
             var boxOrigin = MapHelper.GridToWorldPosition( new Vector2( boxOriginCell.x, boxOriginCell.y ) );
             float halfX = boxSizeCells.x * cellSize * 0.5f;
@@ -105,7 +110,10 @@ namespace Hearthglade.Gameplay.UI.Menu.Build
         // Rebuilds the line-grid mesh only when the ghost moved to a new cell or support layer; returns the
         // world Y both callers place their highlight at.
         private float RebuildLines( Vector2Int centerCell, int y ) {
-            float worldY = y * MapGenerator.TILE_X_OFFSET;
+            return RebuildLinesAt( centerCell, y * MapGenerator.TILE_X_OFFSET );
+        }
+
+        private float RebuildLinesAt( Vector2Int centerCell, float worldY ) {
             if( !linesBuilt || centerCell != lastLinesCenter ) {
                 linesFilter.sharedMesh = BuildLinesMesh( MapGenerator.TILE_X_OFFSET );
                 lastLinesCenter = centerCell;

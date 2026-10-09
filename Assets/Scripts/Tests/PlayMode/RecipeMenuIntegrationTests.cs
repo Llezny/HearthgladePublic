@@ -106,8 +106,8 @@ namespace Hearthglade.PlayModeTests {
             int spawned = 0;
             foreach( var recipe in RecipiesDatabase.instance.buildingsDatabase ) {
                 var item = references.Catalog.GetAsset( new Hearthglade.Core.Items.ItemId( recipe.craftedItemName ) ) as BuildableItemSO;
-                if( item == null ) {
-                    continue; // not listed in the menu either
+                if( item == null || item is Hearthglade.Gameplay.Housing.HouseUpgradeItemSO ) {
+                    continue; // not listed in the menu either / a bigger house puts nothing down
                 }
                 Assert.NotNull( item.buildingPrefab, recipe.craftedItemName + " has no building prefab" );
                 GameObject instance = null;

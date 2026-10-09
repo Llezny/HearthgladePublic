@@ -19,6 +19,8 @@ namespace Hearthglade.Gameplay.UI.Menu.Inventory
 
         public ItemContainer Container { get; private set; }
         public event Action<ItemSO, int> OnItemAdded;
+        /// <summary>The player chose to put a buildable item of the backpack down; whoever builds takes it from there (the item stays in the backpack until it is put down).</summary>
+        public event Action<ItemSO> OnPlaceRequested;
         // Raised when items did not fit: what could not be added, or what the player was not allowed to pick up.
         public event Action<ItemSO, int> OnItemRejected;
         public event Action<ItemDefinition, NutritionOverride> OnItemUsed;
@@ -110,6 +112,16 @@ namespace Hearthglade.Gameplay.UI.Menu.Inventory
             var nutrition = stack.EffectiveNutrition;
             slot.Remove( 1 );
             OnItemUsed?.Invoke( stack.Definition, nutrition );
+        }
+
+        public void PlaceItem( ItemSlot slot ) {
+            if( slot == null || slot.IsEmpty || ( SlotActions.Available( slot ) & SlotAction.Place ) == 0 ) {
+                return;
+            }
+            var item = catalog.GetAsset( slot.Stack.Definition );
+            if( item != null ) {
+                OnPlaceRequested?.Invoke( item );
+            }
         }
 
         public int Count( ItemId id ) => Container.Count( id );

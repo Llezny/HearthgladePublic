@@ -42,6 +42,8 @@ LOG_END = (7, 2)
 FERN = (7, 3)
 APPLE_GREEN = (7, 4)
 MUSHROOM_CAP = (7, 5)
+PLANK_LIGHT = (7, 6)
+PLANK_PALE = (7, 7)
 
 (BLACK, WOOD_DARK, WOOD_MID, PLANK_TAN, THATCH, WATER_TEAL, WALL_WHITE, GREEN_L, BLUE_L, HAY, SKIN, BLUE_D, PLANK_BROWN, WALL_CREAM,
  PURPLE, PINK, STONE, GREEN, RED, ORANGE, YELLOW, YELLOW_L, STONE_D, ROOF_RUST, ROOF_GREY, RED_BRIGHT) = (
@@ -58,7 +60,7 @@ FOREST_COLOURS = {
     ROOF_GREY: "4a4a3c", RED_BRIGHT: "b0483a",
     SHINGLE_A: "4b4631", SHINGLE_B: "5e5738", SHINGLE_MOSS: "4d5a35", TIMBER_RED: "5e2f26", IRON: "2b2d30", COPPER: "a25f35",
     GLOW: "ffb347", PLASTER_DIM: "a29b8b", PLASTER_SHADE: "8a8474", LOG_END: "c49a64", FERN: "33502d", APPLE_GREEN: "8ca03f",
-    MUSHROOM_CAP: "9c4a3a",
+    MUSHROOM_CAP: "9c4a3a", PLANK_LIGHT: "bd9564", PLANK_PALE: "d3ae7c",
 }
 GLOWING = (YELLOW_L, GLOW)
 # The lighting of the game is bright and hazy, so the colours above are drawn darker in the texture.
@@ -170,8 +172,8 @@ def log(bm, center, radius, length, bark, end, sides=6, axis="x"):
 
 # ---- roof, windows, doors, timber frame -------------------------------------------------------------------------------
 
-def roof(bm, f, cx, cy, w, d, base_z, rise, ov, cells, gable_cell, courses=4, ov_x=None):
-    """A steep shingled gable roof, ridge along the local X: courses of shingles in two pieces each, barge boards, crossed horns at
+def roof(bm, f, cx, cy, w, d, base_z, rise, ov, cells, gable_cell, courses=4, ov_x=None, cols=2):
+    """A steep shingled gable roof, ridge along the local X: courses of shingles in `cols` pieces each, barge boards, crossed horns at
     the ridge ends, a ridge cap. (cx, cy) = centre, w = length along the ridge, d = depth across it."""
     ov_x = ov if ov_x is None else ov_x
     half_d = d / 2
@@ -189,10 +191,10 @@ def roof(bm, f, cx, cy, w, d, base_z, rise, ov, cells, gable_cell, courses=4, ov
         eave = Vector((cx, cy + side * run, base_z - ov * tan))
         for i in range(courses):
             centre = eave + u * (length * (i + 0.5) / courses) + normal * (thick / 2 + (i % 2) * 0.004)
-            for k in range(2):
-                x = cx + (k - 0.5) * span / 2
+            for k in range(cols):
+                x = cx + (k + 0.5 - cols / 2) * span / cols
                 cell = cells[(i * 2 + k + (1 if side > 0 else 0) + (i // 2)) % len(cells)]
-                out += box(bm, f, (x, centre.y, centre.z), (span / 2 - 0.003, length / courses * 1.35, thick), cell, (ang, 0.0, 0.0))
+                out += box(bm, f, (x, centre.y, centre.z), (span / cols - 0.003, length / courses * 1.35, thick), cell, (ang, 0.0, 0.0))
         for end in (-1, 1):
             x = cx + end * (span / 2 - 0.004)
             centre = eave + u * (length / 2) + normal * (thick + 0.006)
@@ -551,4 +553,5 @@ def main():
     render_view([by_name[n] for n in ("ForestHouseLarge", "ForestFence", "ForestWoodPile", "ForestLantern")], f"{stem}_misc.png", 25, 4, spacing=1.7)
 
 
-main()
+if __name__ == "__main__":
+    main()

@@ -42,6 +42,13 @@ namespace Hearthglade.Core.Tests {
         }
 
         [ Test ]
+        public void BuildableItem_OffersPlace( ) {
+            var slot = new ItemSlot();
+            slot.Set( ItemStack.Of( TestItems.Stool() ) );
+            Assert.AreEqual( SlotAction.Place, SlotActions.Available( slot ) );
+        }
+
+        [ Test ]
         public void NonUsableOrEmpty_OffersNothing( ) {
             var slot = new ItemSlot();
             Assert.AreEqual( SlotAction.None, SlotActions.Available( slot ) );

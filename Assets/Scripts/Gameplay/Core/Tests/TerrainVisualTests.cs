@@ -162,6 +162,29 @@ namespace Hearthglade.Core.Tests {
         }
 
         [ Test ]
+        public void SetWalkable_TogglesOnlyThatBit_LeavingEveryOtherFlagAndBiomeUntouched( ) {
+            var grid = new TerrainGrid( 3 );
+            grid.Set( 1, 1, new TerrainCell { Present = true, Ground = true, Walkable = true, Elevated = true, Biome = 5 } );
+
+            grid.SetWalkable( 1, 1, false );
+            var blocked = grid.Get( 1, 1 );
+            Assert.IsFalse( blocked.Walkable );
+            Assert.IsTrue( blocked.Present );
+            Assert.IsTrue( blocked.Ground );
+            Assert.IsTrue( blocked.Elevated );
+            Assert.AreEqual( 5, blocked.Biome );
+
+            grid.SetWalkable( 1, 1, true );
+            Assert.IsTrue( grid.Get( 1, 1 ).Walkable );
+        }
+
+        [ Test ]
+        public void SetWalkable_OutsideTheGrid_Throws( ) {
+            var grid = new TerrainGrid( 3 );
+            Assert.Throws<ArgumentOutOfRangeException>( ( ) => grid.SetWalkable( 3, 0, false ) );
+        }
+
+        [ Test ]
         public void SetFlattened_OutsideTheGrid_Throws( ) {
             var grid = new TerrainGrid( 3 );
             Assert.Throws<ArgumentOutOfRangeException>( ( ) => grid.SetFlattened( 3, 0, true ) );

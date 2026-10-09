@@ -210,6 +210,21 @@ namespace Hearthglade.Gameplay.Map
             AddGrassClearZone( pieceId, GrassClearZone.ForCells( x0, z0, sizeX, sizeZ, radius ) );
         }
 
+        /// <summary>
+        /// Like <see cref="ClearGrassUnderCells"/> for a footprint that is not made of whole cells (a prop of a point of interest). The centre and
+        /// the half sizes are in cell units, a cell centre being an integer.
+        /// </summary>
+        public void ClearGrassUnderArea( int pieceId, float centerX, float centerZ, float halfX, float halfZ, float radius ) {
+            AddGrassClearZone( pieceId, new GrassClearZone( centerX, centerZ, halfX, halfZ, radius ) );
+        }
+
+        /// <summary>Takes a cell away from the player (and the animals): something solid stands on it. Cells outside the map are ignored.</summary>
+        public void BlockWalkingAt( int x, int z ) {
+            if( Terrain.InBounds( x, z ) ) {
+                Terrain.SetWalkable( x, z, false );
+            }
+        }
+
         /// <summary>Like <see cref="ClearGrassUnderCells"/> for a wall/door: a thin strip along its edge.</summary>
         public void ClearGrassOnEdge( int pieceId, int x, int z, EdgeSide side, float radius ) {
             AddGrassClearZone( pieceId, GrassClearZone.ForEdge( x, z, side, EdgePieceThicknessCells, radius ) );
@@ -385,14 +400,7 @@ namespace Hearthglade.Gameplay.Map
 
         private void SetPlayerPosition( BlockModel playerNode ) {
             var position = HasEntryAtPreviousMap ? EntryPosAtPreviousMap : playerNode.WorldPosition;
-            playerController.transform.SetPositionAndRotation( position, Quaternion.identity );
-            // The player is an interpolated Rigidbody: without moving the body too, its old pose wins on the next physics step
-            // (unnoticed while the start was next to the origin).
-            if( playerController.TryGetComponent<Rigidbody>( out var body ) ) {
-                body.position = position;
-                body.rotation = Quaternion.identity;
-            }
-            Physics.SyncTransforms();
+            playerController.TeleportTo( position, Quaternion.identity );
         }
 
         private void SetEntryPosition( BlockModel playerNode, int destinationMapId ) {

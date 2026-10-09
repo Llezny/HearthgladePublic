@@ -26,13 +26,15 @@ namespace Hearthglade.Gameplay.UI.Menu.Inventory
         private bool hasPendingFrame;
 
         public void OnPointerClick(PointerEventData data) {
-            if( ( SlotActions.Available( Slot ) & SlotAction.Use ) != 0 ) {
+            var available = SlotActions.Available( Slot );
+            if( ( available & ( SlotAction.Use | SlotAction.Place ) ) != 0 ) {
+                var use = ( available & SlotAction.Use ) != 0;
                 var obj = Instantiate( ContextButtonPrefab ).GetComponent<ContextButton>();
                 var pos = this.GetComponent<RectTransform>().position;
-                obj.SetupButton( 
+                obj.SetupButton(
                     new Vector3( pos.x, pos.y + 100, pos.z ),
-                    () => slotActions.UseItem( Slot ),
-                    "Use"
+                    () => { if( use ) slotActions.UseItem( Slot ); else slotActions.PlaceItem( Slot ); },
+                    use ? "Use" : "Place"
                 );
             }
         }

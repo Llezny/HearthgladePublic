@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using DG.Tweening;
+using Hearthglade.Gameplay.Environment;
+using Lean.Touch;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,6 +13,8 @@ namespace Hearthglade.Gameplay.UI.HUD.Messages
     /// Lives on a screen-space canvas (so trees can't hide it and it stays crisp) and follows a world point every frame.
     /// The root sits exactly on the tip of the bubble's tail, so it scales and positions around the tail.
     /// Driven by <see cref="MurmurService"/>; built by Tools/Agent Tools/UI/Build murmur bubble.
+    /// The same bubble also serves as a small menu (<see cref="ShowOptions"/>, driven by <see cref="ContextBubbleService"/>): the title is
+    /// the name of the object and under it come tappable lines. A menu stays until the player picks a line or taps somewhere else.
     /// </summary>
     public class MurmurBubble : MonoBehaviour
     {
@@ -20,6 +25,11 @@ namespace Hearthglade.Gameplay.UI.HUD.Messages
         private const float REFRESH_PUNCH = 0.05f;
         private const float UNLIMITED_WIDTH = 10000f;
         private const float BALANCE_STEP = 10f;
+        private const float OPTION_HEIGHT = 74f;
+        private const float OPTION_TEXT_SCALE = 0.95f;
+        private static readonly Color OptionHighlight = new Color32( 75, 38, 16, 40 );
+        private static readonly Color OptionPressed = new Color32( 75, 38, 16, 90 );
+        private static readonly Color DividerColor = new Color32( 165, 80, 28, 120 );
 
         [ SerializeField ] private RectTransform bubble;
         [ SerializeField ] private TextMeshProUGUI title;
@@ -42,8 +52,10 @@ namespace Hearthglade.Gameplay.UI.HUD.Messages
         private Tween fadeTween;
         private Tween lifetimeTween;
         private bool isShown;
+        private readonly List<GameObject> optionRows = new List<GameObject>();
 
         public bool IsShown => isShown;
+        public bool HasOptions => isShown && optionRows.Count > 0;
         public string TitleText => title.text;
         public string SubtitleText => subtitle.gameObject.activeSelf ? subtitle.text : null;
 
@@ -57,16 +69,124 @@ namespace Hearthglade.Gameplay.UI.HUD.Messages
 
         private void OnDestroy()
         {
+            LeanTouch.OnFingerDown -= HandleFingerDown;
             KillTweens();
+        }
+
+        // A tap on anything but the menu closes it (the lines of the menu are on the GUI, so they do not count).
+        private void HandleFingerDown( LeanFinger finger )
+        {
+            if( HasOptions && !finger.IsOverGui )
+            {
+                Hide();
+            }
+        }
+
+        private void ClearOptions()
+        {
+            foreach( var row in optionRows )
+            {
+                Destroy( row );
+            }
+            optionRows.Clear();
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+        }
+
+        private void AddDivider()
+        {
+            var divider = new GameObject( "Divider", typeof( RectTransform ), typeof( Image ), typeof( LayoutElement ) ) { layer = gameObject.layer };
+            divider.transform.SetParent( bubble, false );
+            var image = divider.GetComponent< Image >();
+            image.color = DividerColor;
+            image.raycastTarget = false;
+            var size = divider.GetComponent< LayoutElement >();
+            size.minHeight = size.preferredHeight = 3f;
+            size.flexibleWidth = 1f;
+            optionRows.Add( divider );
+        }
+
+        // A line of the menu: the text of the title (same font and colour) on a row that tints when pressed.
+        private void AddOption( ContextAction action )
+        {
+            var row = new GameObject( action.Label, typeof( RectTransform ), typeof( Image ), typeof( Button ), typeof( LayoutElement ) ) { layer = gameObject.layer };
+            row.transform.SetParent( bubble, false );
+            var size = row.GetComponent< LayoutElement >();
+            size.minHeight = size.preferredHeight = OPTION_HEIGHT;
+            size.flexibleWidth = 1f;
+            var background = row.GetComponent< Image >();
+            background.color = Color.white;
+            var button = row.GetComponent< Button >();
+            button.targetGraphic = background;
+            button.transition = Selectable.Transition.ColorTint;
+            button.colors = new ColorBlock
+            {
+                normalColor = Color.clear,
+                highlightedColor = OptionHighlight,
+                pressedColor = OptionPressed,
+                selectedColor = Color.clear,
+                disabledColor = Color.clear,
+                colorMultiplier = 1f,
+                fadeDuration = 0.08f,
+            };
+
+            var label = Instantiate( title, row.transform );
+            label.name = "Label";
+            DestroyImmediate( label.GetComponent< LayoutElement >() );
+            label.fontSize = title.fontSize * OPTION_TEXT_SCALE;
+            label.text = action.Label;
+            label.raycastTarget = false;
+            var rect = label.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+
+            var execute = action.Execute;
+            button.onClick.AddListener( ( ) =>
+            {
+                Hide();
+                execute?.Invoke();
+            } );
+            optionRows.Add( row );
         }
 
         /// <summary>Shows the bubble over <paramref name="followed"/>, or just swaps the text if it is already up.</summary>
         public void Show( string titleText, string subtitleText, float duration, Transform followed, Camera camera )
         {
+            ClearOptions();
+            SetTexts( titleText, subtitleText );
+            PopIn( followed, camera );
+            lifetimeTween = DOVirtual.DelayedCall( duration, Hide, ignoreTimeScale: true );
+        }
+
+        /// <summary>Shows the bubble over <paramref name="followed"/> as a menu: its name and a line to tap for every action.</summary>
+        public void ShowOptions( string titleText, IReadOnlyList<ContextAction> actions, Transform followed, Camera camera )
+        {
+            ClearOptions();
+            SetTexts( titleText, null );
+            AddDivider();
+            foreach( var action in actions )
+            {
+                AddOption( action );
+            }
+            LayoutRebuilder.ForceRebuildLayoutImmediate( bubble );
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+            // The canvas of the bubbles shows icons that nobody taps, so it may have no raycaster; the lines need one to be tapped.
+            if( canvas.GetComponent< GraphicRaycaster >() == null )
+            {
+                canvas.gameObject.AddComponent< GraphicRaycaster >();
+            }
+            LeanTouch.OnFingerDown -= HandleFingerDown;
+            LeanTouch.OnFingerDown += HandleFingerDown;
+            PopIn( followed, camera );
+        }
+
+        private void PopIn( Transform followed, Camera camera )
+        {
             target = followed;
             worldCamera = camera;
             headOffset = MeasureHeadOffset( followed );
-            SetTexts( titleText, subtitleText );
 
             KillTweens();
             gameObject.SetActive( true );
@@ -85,7 +205,6 @@ namespace Hearthglade.Gameplay.UI.HUD.Messages
                 fadeTween = canvasGroup.DOFade( 1f, FADE_IN_DURATION ).SetUpdate( true );
                 scaleTween = rootRect.DOScale( baseScale, POP_IN_DURATION ).SetEase( Ease.OutBack ).SetUpdate( true );
             }
-            lifetimeTween = DOVirtual.DelayedCall( duration, Hide, ignoreTimeScale: true );
         }
 
         public void Hide()
@@ -95,6 +214,9 @@ namespace Hearthglade.Gameplay.UI.HUD.Messages
                 return;
             }
             isShown = false;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+            LeanTouch.OnFingerDown -= HandleFingerDown;
             KillTweens();
             fadeTween = canvasGroup.DOFade( 0f, FADE_OUT_DURATION ).SetUpdate( true );
             scaleTween = rootRect.DOScale( baseScale * POP_IN_START_SCALE, FADE_OUT_DURATION ).SetUpdate( true );

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using Hearthglade.Core.World;
@@ -9,6 +10,7 @@ using Hearthglade.Gameplay.Environment;
 using Hearthglade.Gameplay.Map;
 using Hearthglade.Gameplay.Map.Visual;
 using Hearthglade.Gameplay.UI.HUD;
+using Hearthglade.Gameplay.UI.HUD.Messages;
 using Hearthglade.Gameplay.UI.Menu.Common;
 using Lean.Touch;
 using UnityEngine;
@@ -48,6 +50,7 @@ namespace Hearthglade.Gameplay.Player.Controller
         [SerializeField] AudioSO attackAudio = null;
         private GameManager gameManager;
         private TooltipManager tooltipManager = null;
+        private ContextBubbleService contextBubbleService = null;
         private Camera mainCamera;
         private PauseMenu pauseMenu;
         private LoadedMapEvent loadedMapEvent;
@@ -72,13 +75,57 @@ namespace Hearthglade.Gameplay.Player.Controller
         private List<(int x, int z)> lastKnownRoomCells;
 
         [Inject]
-        public void Construct( PauseMenu pauseMenu, TooltipManager tooltipManager, LoadedMapEvent loadedMapEvent, GameManager gameManager, CanvasService canvasService ) {
+        public void Construct( PauseMenu pauseMenu, TooltipManager tooltipManager, LoadedMapEvent loadedMapEvent, GameManager gameManager, CanvasService canvasService, ContextBubbleService contextBubbleService ) {
+            this.contextBubbleService = contextBubbleService;
             this.pauseMenu = pauseMenu;
             this.tooltipManager = tooltipManager;
             this.loadedMapEvent = loadedMapEvent;
             this.loadedMapEvent.RegisterListener( OnMapChanged );
             this.gameManager = gameManager;
             this.canvasService = canvasService;
+        }
+
+        /// <summary>Set while the player is inside a house: replaces the map's terrain as the judge of where they can walk.</summary>
+        public IWalkArea WalkArea { get; private set; }
+
+        public void EnterInterior( IWalkArea walkArea ) {
+            WalkArea = walkArea;
+            IsIndoors = true;
+            roomEnclosureIndicator?.SetEnclosed( true );
+            roomDarknessOverlay?.Hide();
+            roomWallCutaway?.FadeIn();
+        }
+
+        public void ExitInterior( ) {
+            WalkArea = null;
+            IsIndoors = false;
+            // Forces the room check on the next frame, whatever cell the player comes out in.
+            lastRoomCheckCell = ( int.MinValue, int.MinValue );
+            roomCheckTimer = 0f;
+        }
+
+        /// <summary>Stops all walking at once (before a teleport).</summary>
+        public void StopMoving( ) {
+            EndAutoMove( );
+            KillDecelerationTween( );
+            moveVector = Vector3.zero;
+            if ( IsWalking ) {
+                StopWalking( );
+            }
+            MovementSpeedChanged?.Invoke( 0f );
+        }
+
+        /// <summary>
+        /// Moves the player to a position now. The player is an interpolated Rigidbody: without moving the body too, its old pose wins on
+        /// the next physics step.
+        /// </summary>
+        public void TeleportTo( Vector3 position, Quaternion rotation ) {
+            transform.SetPositionAndRotation( position, rotation );
+            if ( TryGetComponent<Rigidbody>( out var body ) ) {
+                body.position = position;
+                body.rotation = rotation;
+            }
+            Physics.SyncTransforms();
         }
 
         private void OnMapChanged( Map.Map newMap ) {
@@ -111,7 +158,8 @@ namespace Hearthglade.Gameplay.Player.Controller
             roomDarknessOverlay?.Tick( Time.deltaTime );
 
             roomCheckTimer -= Time.deltaTime;
-            if ( currentMap == null ) {
+            // Inside a house the terrain says nothing about the room (the house has its own walk area).
+            if ( currentMap == null || WalkArea != null ) {
                 return;
             }
 
@@ -234,7 +282,7 @@ namespace Hearthglade.Gameplay.Player.Controller
         private const float ElevationLerpSpeed = 0.5f;
 
         private void ApplyTerrainElevation( ) {
-            if ( currentMap == null ) {
+            if ( currentMap == null || WalkArea != null ) {
                 return;
             }
             var terrainVisual = TerrainVisualSO.Load();
@@ -273,6 +321,10 @@ namespace Hearthglade.Gameplay.Player.Controller
                 Time.fixedDeltaTime * PlayerRotationSpeed );
         }
         
+        private bool CanStep( Vector3 from, Vector3 to ) {
+            return WalkArea != null ? WalkArea.CanMoveTo( from, to ) : currentMap.CanMoveTo( from, to );
+        }
+
         // Whether a step is allowed is decided entirely by terrain data (Map.CanMoveTo, checked below), not
         // by physics colliders: the terrain grid is loaded synchronously for the whole map up front, while
         // chunk colliders/GameObjects stream in asynchronously and are unreliable to gate movement on (a
@@ -281,20 +333,20 @@ namespace Hearthglade.Gameplay.Player.Controller
             var step = MovementSpeed * Time.fixedDeltaTime * moveVector;
             var currentPos = transform.position;
 
-            if ( currentMap == null ) {
+            if ( currentMap == null && WalkArea == null ) {
                 transform.Translate( step, Space.World );
             }
-            else if ( currentMap.CanMoveTo( currentPos, currentPos + step ) ) {
+            else if ( CanStep( currentPos, currentPos + step ) ) {
                 transform.Translate( step, Space.World );
             }
             else {
                 var stepX = new Vector3( step.x, 0f, 0f );
                 var stepZ = new Vector3( 0f, 0f, step.z );
 
-                if ( stepX.sqrMagnitude > 0f && currentMap.CanMoveTo( currentPos, currentPos + stepX ) ) {
+                if ( stepX.sqrMagnitude > 0f && CanStep( currentPos, currentPos + stepX ) ) {
                     transform.Translate( stepX, Space.World );
                 }
-                else if ( stepZ.sqrMagnitude > 0f && currentMap.CanMoveTo( currentPos, currentPos + stepZ ) ) {
+                else if ( stepZ.sqrMagnitude > 0f && CanStep( currentPos, currentPos + stepZ ) ) {
                     transform.Translate( stepZ, Space.World );
                 }
             }
@@ -451,6 +503,7 @@ namespace Hearthglade.Gameplay.Player.Controller
 
         private void HandleFingerUp( LeanFinger finger ) {
             tooltipManager.HideToolTip( );
+            CancelContextHold( );
             // if ( finger.IsOverGui || isMouseLocked || MenuManager.isGamePaused ) {
             //     return;
             // }
@@ -468,7 +521,39 @@ namespace Hearthglade.Gameplay.Player.Controller
 
             currentlyPressedClickable = hit.transform;
             var clickable = currentlyPressedClickable.GetComponent<IInteractable>( );
-            tooltipManager.SetupTooltipAndStartCounter( clickable.TooltipTitle, clickable.TooltipDescription );
+            // An object with actions opens their menu when held (a tap still interacts); any other object shows its tooltip.
+            if ( clickable is IContextActions withActions && withActions.ContextActions.Count > 0 ) {
+                CancelContextHold( );
+                contextHold = StartCoroutine( OpenContextBubbleAfterHold( finger, clickable, withActions ) );
+            }
+            else {
+                tooltipManager.SetupTooltipAndStartCounter( clickable.TooltipTitle, clickable.TooltipDescription );
+            }
+        }
+
+        private const float ContextHoldSeconds = 0.5f;
+        // Screen pixels; a finger that travels further is steering the joystick, not asking for the menu.
+        private const float ContextHoldMaxTravel = 30f;
+        private Coroutine contextHold;
+
+        private void CancelContextHold( ) {
+            if ( contextHold != null ) {
+                StopCoroutine( contextHold );
+                contextHold = null;
+            }
+        }
+
+        private IEnumerator OpenContextBubbleAfterHold( LeanFinger finger, IInteractable target, IContextActions actions ) {
+            var start = finger.ScreenPosition;
+            for ( float held = 0f; held < ContextHoldSeconds; held += Time.unscaledDeltaTime ) {
+                if ( ( finger.ScreenPosition - start ).magnitude > ContextHoldMaxTravel ) {
+                    contextHold = null;
+                    yield break;
+                }
+                yield return null;
+            }
+            contextHold = null;
+            contextBubbleService.Show( target.TooltipTitle, actions.ContextActions, target.GetTransform( ) );
         }
 
         public void LockControl( ) {

@@ -65,7 +65,13 @@ namespace Hearthglade.Gameplay.Map {
         // Async work below stops as soon as the owning map is destroyed.
         private CancellationToken LifetimeToken => targetMap.GetCancellationTokenOnDestroy();
 
+        /// <summary>While set, the chunks stay as they are however far the player is (inside a house, far above the island).</summary>
+        public bool StreamingPaused { get; set; }
+
         public void Tick() {
+            if ( StreamingPaused ) {
+                return;
+            }
             UpdateEnabledChunks();
         }
 

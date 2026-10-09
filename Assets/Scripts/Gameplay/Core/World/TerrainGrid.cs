@@ -110,6 +110,18 @@ namespace Hearthglade.Core.World {
             flags[ i ] = flattened ? ( byte ) ( flags[ i ] | FlattenedFlag ) : ( byte ) ( flags[ i ] & ~FlattenedFlag );
         }
 
+        /// <summary>
+        /// Sets or clears only the <see cref="TerrainCell.Walkable"/> bit of a cell: a prop that stands on the ground (a house) takes the cell away from
+        /// the player, who is stopped by terrain data and not by colliders. A no-op on a cell that was never set.
+        /// </summary>
+        public void SetWalkable( int x, int y, bool walkable ) {
+            if( !InBounds( x, y ) ) {
+                throw new ArgumentOutOfRangeException( $"Cell ({x}, {y}) is outside a {Size}x{Size} grid" );
+            }
+            int i = y * Size + x;
+            flags[ i ] = walkable ? ( byte ) ( flags[ i ] | WalkableFlag ) : ( byte ) ( flags[ i ] & ~WalkableFlag );
+        }
+
         private readonly System.Collections.Generic.List<GrassClearZone> grassClearZones = new System.Collections.Generic.List<GrassClearZone>();
 
         /// <summary>Registers an area building pieces keep grass out of; chunk visuals must be invalidated by the caller.</summary>

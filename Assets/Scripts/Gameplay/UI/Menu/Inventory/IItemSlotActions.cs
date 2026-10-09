@@ -6,5 +6,6 @@ namespace Hearthglade.Gameplay.UI.Menu.Inventory
     public interface IItemSlotActions {
         bool TryMoveItem( ItemSlot from, ItemSlot to );
         void UseItem( ItemSlot slot );
+        void PlaceItem( ItemSlot slot );
     }
 }

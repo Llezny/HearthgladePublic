@@ -47,6 +47,8 @@ namespace Hearthglade.Gameplay.UI.Menu.Crafting
         protected abstract string ActionVerb { get; }
         protected abstract bool ShowsTime { get; }
         protected virtual bool IsBusy => false;
+        // A card the menu has but does not list right now (checked every time a category is shown, so it can depend on where the player is).
+        protected virtual bool IsListed( CraftingCard card ) => true;
         protected abstract void OnCardAction( CraftingCard card );
         protected abstract void OnFooterAction();
         // Refresh what depends on the selection: status text, the footer button state and label.
@@ -118,7 +120,7 @@ namespace Hearthglade.Gameplay.UI.Menu.Crafting
             }
 
             foreach( var card in cards ) {
-                card.gameObject.SetActive( RecipeCategories.Contains( category, card.Category ) );
+                card.gameObject.SetActive( RecipeCategories.Contains( category, card.Category ) && IsListed( card ) );
             }
 
             if( SelectedCard == null || !SelectedCard.gameObject.activeSelf ) {

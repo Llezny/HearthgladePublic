@@ -12,6 +12,7 @@ using Hearthglade.Gameplay.Environment.Cooking;
 using Hearthglade.Gameplay.Environment.Farming;
 using Hearthglade.Gameplay.Events;
 using Hearthglade.Gameplay.Expeditions;
+using Hearthglade.Gameplay.Housing;
 using Hearthglade.Gameplay.Map;
 using Hearthglade.Gameplay.Map.Loading;
 using Hearthglade.Gameplay.Player;
@@ -99,6 +100,8 @@ namespace Hearthglade.Gameplay.Common.Service {
             builder.RegisterComponentInHierarchy<CanvasService>();
             builder.RegisterComponentInHierarchy<AddressableService>();
             builder.RegisterComponentOnNewGameObject<CameraService>( Lifetime.Singleton, "CameraService" );
+            builder.RegisterComponentOnNewGameObject<ScreenFade>( Lifetime.Singleton, "ScreenFade" );
+            builder.RegisterEntryPoint<HouseService>( Lifetime.Scoped ).AsSelf();
             // builder.RegisterComponentInHierarchy<JoystickManager>();
             builder.RegisterEntryPoint<TickService>( Lifetime.Scoped ).AsSelf();
             
@@ -112,6 +115,7 @@ namespace Hearthglade.Gameplay.Common.Service {
             builder.Register<InventorySlotViewFactory>( Lifetime.Singleton ).As<IInventorySlotViewFactory>();
             builder.Register<MessageFactory>( Lifetime.Singleton ).As<IMessageFactory>();
             builder.Register<MurmurService>( Lifetime.Scoped );
+            builder.Register<ContextBubbleService>( Lifetime.Scoped );
 
 #endregion Factories
 

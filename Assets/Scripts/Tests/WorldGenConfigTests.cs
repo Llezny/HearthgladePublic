@@ -179,6 +179,11 @@ namespace Hearthglade.Tests
                     Assert.Contains(piece.prefab, database.Prefabs, $"{piece.prefab.name} of {poi.name} must be in the database, or it cannot be spawned by name");
                     Assert.LessOrEqual(piece.offset.magnitude, poi.clearRadius - 0.5f, $"{piece.prefab.name} of {poi.name} sticks out of the cleared site");
                 }
+                if (poi.anchored)
+                {
+                    // A hand-made site (the player's house) is not a loot site.
+                    continue;
+                }
                 Assert.IsTrue(poi.pieces.Any(p => p.prefab.GetComponent<Hearthglade.Gameplay.Resource.ChestSceneObject>() != null), $"{poi.name} has a chest");
                 Assert.IsTrue(poi.loot.Any(l => l.item != null && l.minTier == 0 && l.weight > 0f), $"{poi.name} holds something at the lowest tier");
                 foreach (var loot in poi.loot)
